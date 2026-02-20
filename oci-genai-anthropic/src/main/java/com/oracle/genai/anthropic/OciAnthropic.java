@@ -7,6 +7,7 @@ package com.oracle.genai.anthropic;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.AnthropicClientImpl;
+import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.core.ClientOptions;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.genai.core.OciHttpClientFactory;
@@ -45,9 +46,10 @@ import java.time.Duration;
  *   <li>{@code security_token} — session token from OCI CLI</li>
  *   <li>{@code instance_principal} — OCI Compute instances</li>
  *   <li>{@code resource_principal} — OCI Functions, Container Instances</li>
+ *   <li>{@code api_key} — direct API key authentication (no OCI signing)</li>
  * </ul>
  * <p>Alternatively, pass a pre-built {@link BasicAuthenticationDetailsProvider}
- * via {@code authProvider()}.
+ * via {@code authProvider()}, or use {@code apiKey()} for direct API key auth.
  */
 public final class OciAnthropic {
 
@@ -61,6 +63,7 @@ public final class OciAnthropic {
     public static final class Builder {
         private String authType;
         private String profile;
+        private String apiKey;
         private BasicAuthenticationDetailsProvider authProvider;
         private String compartmentId;
         private String region;
@@ -75,7 +78,8 @@ public final class OciAnthropic {
         /**
          * Sets the OCI authentication type.
          * One of: {@code oci_config}, {@code security_token},
-         * {@code instance_principal}, {@code resource_principal}.
+         * {@code instance_principal}, {@code resource_principal},
+         * {@code api_key}.
          */
         public Builder authType(String authType) {
             this.authType = authType;
@@ -88,6 +92,16 @@ public final class OciAnthropic {
          */
         public Builder profile(String profile) {
             this.profile = profile;
+            return this;
+        }
+
+        /**
+         * Sets the API key for direct authentication (no OCI signing).
+         * When set, requests are authenticated with this key via the
+         * {@code X-Api-Key} header, bypassing OCI IAM signing entirely.
+         */
+        public Builder apiKey(String apiKey) {
+            this.apiKey = apiKey;
             return this;
         }
 
@@ -146,32 +160,65 @@ public final class OciAnthropic {
         }
 
         /**
-         * Builds the OCI-authenticated Anthropic client.
+         * Builds the Anthropic client.
+         *
+         * <p>When {@code apiKey} is set (or {@code authType} is {@code "api_key"}),
+         * creates a native Anthropic SDK client with direct API key auth.
+         * Otherwise, creates an OCI-authenticated client with IAM request signing.
          *
          * @return a configured {@link AnthropicClient}
          * @throws IllegalArgumentException if required parameters are missing
          */
         public AnthropicClient build() {
+            // API key mode: use native Anthropic SDK client directly
+            if (isApiKeyMode()) {
+                return buildApiKeyClient();
+            }
+
+            // OCI auth mode: use custom signing HTTP client
+            return buildOciSignedClient();
+        }
+
+        private boolean isApiKeyMode() {
+            return (apiKey != null && !apiKey.isBlank())
+                    || "api_key".equals(authType);
+        }
+
+        private AnthropicClient buildApiKeyClient() {
+            String resolvedApiKey = apiKey;
+            if (resolvedApiKey == null || resolvedApiKey.isBlank()) {
+                throw new IllegalArgumentException(
+                        "apiKey is required when authType is 'api_key'.");
+            }
+
+            String resolvedBaseUrl = resolveBaseUrl();
+
+            AnthropicOkHttpClient.Builder builder = AnthropicOkHttpClient.builder()
+                    .apiKey(resolvedApiKey)
+                    .baseUrl(resolvedBaseUrl);
+
+            if (timeout != null) {
+                builder.timeout(timeout);
+            }
+
+            return builder.build();
+        }
+
+        private AnthropicClient buildOciSignedClient() {
             BasicAuthenticationDetailsProvider resolvedAuth = resolveAuthProvider();
 
-            String resolvedBaseUrl = OciEndpointResolver.resolveAnthropicBaseUrl(
-                    region, serviceEndpoint, baseUrl);
+            String resolvedBaseUrl = resolveBaseUrl();
 
             if (resolvedBaseUrl.contains("generativeai") && (compartmentId == null || compartmentId.isBlank())) {
                 throw new IllegalArgumentException(
                         "compartmentId is required to access the OCI Generative AI Service.");
             }
 
-            // Create OCI-signed OkHttpClient from core
             okhttp3.OkHttpClient signedOkHttpClient = OciHttpClientFactory.create(
                     resolvedAuth, compartmentId, null, timeout, logRequestsAndResponses);
 
-            // Create a signing HTTP client that implements the Anthropic SDK's HttpClient interface.
-            // This strips X-Api-Key headers and delegates to the OCI-signed OkHttpClient.
             OciSigningHttpClient signingHttpClient = new OciSigningHttpClient(signedOkHttpClient);
 
-            // Build ClientOptions with our signing HTTP client and base URL.
-            // No API key is needed — OCI signing replaces Anthropic API key authentication.
             ClientOptions clientOptions = ClientOptions.builder()
                     .httpClient(signingHttpClient)
                     .baseUrl(resolvedBaseUrl)
@@ -180,13 +227,18 @@ public final class OciAnthropic {
             return new AnthropicClientImpl(clientOptions);
         }
 
+        private String resolveBaseUrl() {
+            return OciEndpointResolver.resolveAnthropicBaseUrl(
+                    region, serviceEndpoint, baseUrl);
+        }
+
         private BasicAuthenticationDetailsProvider resolveAuthProvider() {
             if (authProvider != null) {
                 return authProvider;
             }
             if (authType == null || authType.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Either authType or authProvider must be provided.");
+                        "Either authType, authProvider, or apiKey must be provided.");
             }
             return OciAuthProviderFactory.create(authType, profile);
         }

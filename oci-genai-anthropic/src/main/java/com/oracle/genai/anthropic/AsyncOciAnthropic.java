@@ -7,6 +7,7 @@ package com.oracle.genai.anthropic;
 
 import com.anthropic.client.AnthropicClientAsync;
 import com.anthropic.client.AnthropicClientAsyncImpl;
+import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
 import com.anthropic.core.ClientOptions;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.genai.core.OciHttpClientFactory;
@@ -49,6 +50,7 @@ public final class AsyncOciAnthropic {
     public static final class Builder {
         private String authType;
         private String profile;
+        private String apiKey;
         private BasicAuthenticationDetailsProvider authProvider;
         private String compartmentId;
         private String region;
@@ -62,6 +64,7 @@ public final class AsyncOciAnthropic {
 
         public Builder authType(String authType) { this.authType = authType; return this; }
         public Builder profile(String profile) { this.profile = profile; return this; }
+        public Builder apiKey(String apiKey) { this.apiKey = apiKey; return this; }
         public Builder authProvider(BasicAuthenticationDetailsProvider authProvider) { this.authProvider = authProvider; return this; }
         public Builder compartmentId(String compartmentId) { this.compartmentId = compartmentId; return this; }
         public Builder region(String region) { this.region = region; return this; }
@@ -71,6 +74,39 @@ public final class AsyncOciAnthropic {
         public Builder logRequestsAndResponses(boolean logRequestsAndResponses) { this.logRequestsAndResponses = logRequestsAndResponses; return this; }
 
         public AnthropicClientAsync build() {
+            if (isApiKeyMode()) {
+                return buildApiKeyClient();
+            }
+            return buildOciSignedClient();
+        }
+
+        private boolean isApiKeyMode() {
+            return (apiKey != null && !apiKey.isBlank())
+                    || "api_key".equals(authType);
+        }
+
+        private AnthropicClientAsync buildApiKeyClient() {
+            String resolvedApiKey = apiKey;
+            if (resolvedApiKey == null || resolvedApiKey.isBlank()) {
+                throw new IllegalArgumentException(
+                        "apiKey is required when authType is 'api_key'.");
+            }
+
+            String resolvedBaseUrl = OciEndpointResolver.resolveAnthropicBaseUrl(
+                    region, serviceEndpoint, baseUrl);
+
+            AnthropicOkHttpClientAsync.Builder builder = AnthropicOkHttpClientAsync.builder()
+                    .apiKey(resolvedApiKey)
+                    .baseUrl(resolvedBaseUrl);
+
+            if (timeout != null) {
+                builder.timeout(timeout);
+            }
+
+            return builder.build();
+        }
+
+        private AnthropicClientAsync buildOciSignedClient() {
             BasicAuthenticationDetailsProvider resolvedAuth = resolveAuthProvider();
 
             String resolvedBaseUrl = OciEndpointResolver.resolveAnthropicBaseUrl(
@@ -97,7 +133,7 @@ public final class AsyncOciAnthropic {
         private BasicAuthenticationDetailsProvider resolveAuthProvider() {
             if (authProvider != null) return authProvider;
             if (authType == null || authType.isBlank()) {
-                throw new IllegalArgumentException("Either authType or authProvider must be provided.");
+                throw new IllegalArgumentException("Either authType, authProvider, or apiKey must be provided.");
             }
             return OciAuthProviderFactory.create(authType, profile);
         }
