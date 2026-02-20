@@ -7,6 +7,7 @@ package com.oracle.genai.openai;
 
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.OpenAIClientAsyncImpl;
+import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.ClientOptions;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.genai.core.OciHttpClientFactory;
@@ -54,6 +55,7 @@ public final class AsyncOciOpenAI {
     public static final class Builder {
         private String authType;
         private String profile;
+        private String apiKey;
         private BasicAuthenticationDetailsProvider authProvider;
         private String compartmentId;
         private String conversationStoreId;
@@ -68,6 +70,7 @@ public final class AsyncOciOpenAI {
 
         public Builder authType(String authType) { this.authType = authType; return this; }
         public Builder profile(String profile) { this.profile = profile; return this; }
+        public Builder apiKey(String apiKey) { this.apiKey = apiKey; return this; }
         public Builder authProvider(BasicAuthenticationDetailsProvider authProvider) { this.authProvider = authProvider; return this; }
         public Builder compartmentId(String compartmentId) { this.compartmentId = compartmentId; return this; }
         public Builder conversationStoreId(String conversationStoreId) { this.conversationStoreId = conversationStoreId; return this; }
@@ -78,6 +81,39 @@ public final class AsyncOciOpenAI {
         public Builder logRequestsAndResponses(boolean logRequestsAndResponses) { this.logRequestsAndResponses = logRequestsAndResponses; return this; }
 
         public OpenAIClientAsync build() {
+            if (isApiKeyMode()) {
+                return buildApiKeyClient();
+            }
+            return buildOciSignedClient();
+        }
+
+        private boolean isApiKeyMode() {
+            return (apiKey != null && !apiKey.isBlank())
+                    || "api_key".equals(authType);
+        }
+
+        private OpenAIClientAsync buildApiKeyClient() {
+            String resolvedApiKey = apiKey;
+            if (resolvedApiKey == null || resolvedApiKey.isBlank()) {
+                throw new IllegalArgumentException(
+                        "apiKey is required when authType is 'api_key'.");
+            }
+
+            String resolvedBaseUrl = OciEndpointResolver.resolveOpenAiBaseUrl(
+                    region, serviceEndpoint, baseUrl);
+
+            OpenAIOkHttpClientAsync.Builder builder = OpenAIOkHttpClientAsync.builder()
+                    .apiKey(resolvedApiKey)
+                    .baseUrl(resolvedBaseUrl);
+
+            if (timeout != null) {
+                builder.timeout(timeout);
+            }
+
+            return builder.build();
+        }
+
+        private OpenAIClientAsync buildOciSignedClient() {
             BasicAuthenticationDetailsProvider resolvedAuth = resolveAuthProvider();
 
             String resolvedBaseUrl = OciEndpointResolver.resolveOpenAiBaseUrl(
@@ -115,7 +151,7 @@ public final class AsyncOciOpenAI {
         private BasicAuthenticationDetailsProvider resolveAuthProvider() {
             if (authProvider != null) return authProvider;
             if (authType == null || authType.isBlank()) {
-                throw new IllegalArgumentException("Either authType or authProvider must be provided.");
+                throw new IllegalArgumentException("Either authType, authProvider, or apiKey must be provided.");
             }
             return OciAuthProviderFactory.create(authType, profile);
         }

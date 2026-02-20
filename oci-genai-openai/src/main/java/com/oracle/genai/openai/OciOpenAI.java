@@ -7,6 +7,7 @@ package com.oracle.genai.openai;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientImpl;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.core.ClientOptions;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.genai.core.OciHttpClientFactory;
@@ -71,6 +72,7 @@ public final class OciOpenAI {
     public static final class Builder {
         private String authType;
         private String profile;
+        private String apiKey;
         private BasicAuthenticationDetailsProvider authProvider;
         private String compartmentId;
         private String conversationStoreId;
@@ -86,7 +88,8 @@ public final class OciOpenAI {
         /**
          * Sets the OCI authentication type.
          * One of: {@code oci_config}, {@code security_token},
-         * {@code instance_principal}, {@code resource_principal}.
+         * {@code instance_principal}, {@code resource_principal},
+         * {@code api_key}.
          */
         public Builder authType(String authType) {
             this.authType = authType;
@@ -99,6 +102,16 @@ public final class OciOpenAI {
          */
         public Builder profile(String profile) {
             this.profile = profile;
+            return this;
+        }
+
+        /**
+         * Sets the API key for direct authentication (no OCI signing).
+         * When set, requests are authenticated with this key via the
+         * {@code Authorization: Bearer} header, bypassing OCI IAM signing entirely.
+         */
+        public Builder apiKey(String apiKey) {
+            this.apiKey = apiKey;
             return this;
         }
 
@@ -174,38 +187,66 @@ public final class OciOpenAI {
         }
 
         /**
-         * Builds the OCI-authenticated OpenAI client.
+         * Builds the OpenAI client.
+         *
+         * <p>When {@code apiKey} is set (or {@code authType} is {@code "api_key"}),
+         * creates a native OpenAI SDK client with direct API key auth.
+         * Otherwise, creates an OCI-authenticated client with IAM request signing.
          *
          * @return a configured {@link OpenAIClient}
          * @throws IllegalArgumentException if required parameters are missing
          */
         public OpenAIClient build() {
-            // Resolve auth provider
-            BasicAuthenticationDetailsProvider resolvedAuth = resolveAuthProvider();
+            if (isApiKeyMode()) {
+                return buildApiKeyClient();
+            }
+            return buildOciSignedClient();
+        }
 
-            // Resolve base URL
+        private boolean isApiKeyMode() {
+            return (apiKey != null && !apiKey.isBlank())
+                    || "api_key".equals(authType);
+        }
+
+        private OpenAIClient buildApiKeyClient() {
+            String resolvedApiKey = apiKey;
+            if (resolvedApiKey == null || resolvedApiKey.isBlank()) {
+                throw new IllegalArgumentException(
+                        "apiKey is required when authType is 'api_key'.");
+            }
+
             String resolvedBaseUrl = OciEndpointResolver.resolveOpenAiBaseUrl(
                     region, serviceEndpoint, baseUrl);
 
-            // Validate compartment ID for GenAI endpoints
+            OpenAIOkHttpClient.Builder builder = OpenAIOkHttpClient.builder()
+                    .apiKey(resolvedApiKey)
+                    .baseUrl(resolvedBaseUrl);
+
+            if (timeout != null) {
+                builder.timeout(timeout);
+            }
+
+            return builder.build();
+        }
+
+        private OpenAIClient buildOciSignedClient() {
+            BasicAuthenticationDetailsProvider resolvedAuth = resolveAuthProvider();
+
+            String resolvedBaseUrl = OciEndpointResolver.resolveOpenAiBaseUrl(
+                    region, serviceEndpoint, baseUrl);
+
             if (resolvedBaseUrl.contains("generativeai") && (compartmentId == null || compartmentId.isBlank())) {
                 throw new IllegalArgumentException(
                         "compartmentId is required to access the OCI Generative AI Service.");
             }
 
-            // Build additional headers (conversation store ID)
             Map<String, String> additionalHeaders = buildAdditionalHeaders();
 
-            // Create OCI-signed OkHttpClient from core
             okhttp3.OkHttpClient signedOkHttpClient = OciHttpClientFactory.create(
                     resolvedAuth, compartmentId, additionalHeaders, timeout, logRequestsAndResponses);
 
-            // Create a signing HTTP client that implements the OpenAI SDK's HttpClient interface.
-            // This bridges the OCI-signed OkHttpClient with the SDK's HTTP abstraction.
             OciSigningHttpClient signingHttpClient = new OciSigningHttpClient(signedOkHttpClient);
 
-            // Build ClientOptions with our signing HTTP client, base URL, and a dummy API key.
-            // OCI signing replaces API key authentication entirely.
             ClientOptions clientOptions = ClientOptions.builder()
                     .httpClient(signingHttpClient)
                     .baseUrl(resolvedBaseUrl)
@@ -229,7 +270,7 @@ public final class OciOpenAI {
             }
             if (authType == null || authType.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Either authType or authProvider must be provided.");
+                        "Either authType, authProvider, or apiKey must be provided.");
             }
             return OciAuthProviderFactory.create(authType, profile);
         }
