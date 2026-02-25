@@ -222,6 +222,7 @@ public final class OciAnthropic {
             ClientOptions clientOptions = ClientOptions.builder()
                     .httpClient(signingHttpClient)
                     .baseUrl(resolvedBaseUrl)
+                    .putHeader("anthropic-version", "2023-06-01")
                     .build();
 
             return new AnthropicClientImpl(clientOptions);

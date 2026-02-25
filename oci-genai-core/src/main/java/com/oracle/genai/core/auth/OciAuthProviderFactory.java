@@ -75,7 +75,7 @@ public final class OciAuthProviderFactory {
     private static BasicAuthenticationDetailsProvider createConfigProvider(String profile) {
         try {
             return new ConfigFileAuthenticationDetailsProvider(profile);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new OciAuthException(
                     "Failed to create OCI config auth provider for profile '" + profile + "'. " +
                     "Ensure ~/.oci/config exists and the profile is valid.", e);
@@ -85,7 +85,7 @@ public final class OciAuthProviderFactory {
     private static BasicAuthenticationDetailsProvider createSessionTokenProvider(String profile) {
         try {
             return new SessionTokenAuthenticationDetailsProvider(profile);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new OciAuthException(
                     "Failed to create session token auth provider for profile '" + profile + "'. " +
                     "Run 'oci session authenticate' to create a session.", e);

@@ -9,6 +9,7 @@ import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.http.signing.DefaultRequestSigner;
 import com.oracle.bmc.http.signing.RequestSigner;
 import com.oracle.bmc.http.signing.SigningStrategy;
+import com.oracle.bmc.io.internal.WrappedByteArrayInputStream;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -80,7 +81,7 @@ public class OciSigningInterceptor implements Interceptor {
         if (bodyBytes != null && bodyBytes.length > 0) {
             signedHeaders = requestSigner.signRequest(
                     uri, method, existingHeaders,
-                    new java.io.ByteArrayInputStream(bodyBytes));
+                    new WrappedByteArrayInputStream(bodyBytes));
         } else {
             signedHeaders = requestSigner.signRequest(
                     uri, method, existingHeaders, null);

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -36,9 +37,14 @@ class OciSigningHttpClient implements HttpClient {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json");
 
     private final okhttp3.OkHttpClient okHttpClient;
+    private final HttpUrl baseUrl;
 
-    OciSigningHttpClient(okhttp3.OkHttpClient okHttpClient) {
+    OciSigningHttpClient(okhttp3.OkHttpClient okHttpClient, String baseUrl) {
         this.okHttpClient = okHttpClient;
+        this.baseUrl = HttpUrl.parse(baseUrl);
+        if (this.baseUrl == null) {
+            throw new IllegalArgumentException("Invalid base URL: " + baseUrl);
+        }
     }
 
     @Override
@@ -81,14 +87,25 @@ class OciSigningHttpClient implements HttpClient {
     }
 
     private Request toOkHttpRequest(HttpRequest request) {
-        // Build the full URL from the SDK request
+        // Build the full URL: baseUrl + pathSegments, or use url() if available
+        HttpUrl.Builder urlBuilder;
         String url = request.url();
-        HttpUrl parsedUrl = HttpUrl.parse(url);
-        if (parsedUrl == null) {
-            throw new IllegalArgumentException("Invalid URL: " + url);
+        if (url != null && !url.isBlank()) {
+            HttpUrl parsedUrl = HttpUrl.parse(url);
+            if (parsedUrl == null) {
+                throw new IllegalArgumentException("Invalid URL: " + url);
+            }
+            urlBuilder = parsedUrl.newBuilder();
+        } else {
+            // Build from baseUrl + pathSegments (how the OpenAI SDK works)
+            urlBuilder = baseUrl.newBuilder();
+            List<String> pathSegments = request.pathSegments();
+            if (pathSegments != null) {
+                for (String segment : pathSegments) {
+                    urlBuilder.addPathSegment(segment);
+                }
+            }
         }
-
-        HttpUrl.Builder urlBuilder = parsedUrl.newBuilder();
 
         // Add query params
         var queryParams = request.queryParams();
