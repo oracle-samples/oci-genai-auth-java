@@ -9,7 +9,7 @@ import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.http.signing.DefaultRequestSigner;
 import com.oracle.bmc.http.signing.RequestSigner;
 import com.oracle.bmc.http.signing.SigningStrategy;
-import com.oracle.bmc.io.internal.WrappedByteArrayInputStream;
+import com.oracle.bmc.http.client.io.DuplicatableInputStream;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -19,7 +19,9 @@ import okio.Buffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +83,7 @@ public class OciSigningInterceptor implements Interceptor {
         if (bodyBytes != null && bodyBytes.length > 0) {
             signedHeaders = requestSigner.signRequest(
                     uri, method, existingHeaders,
-                    new WrappedByteArrayInputStream(bodyBytes));
+                    new DuplicatableByteArrayInputStream(bodyBytes));
         } else {
             signedHeaders = requestSigner.signRequest(
                     uri, method, existingHeaders, null);
@@ -105,5 +107,25 @@ public class OciSigningInterceptor implements Interceptor {
         LOG.debug("OCI-signed request: {} {}", method, uri);
 
         return chain.proceed(signedRequest);
+    }
+
+    /**
+     * A {@link ByteArrayInputStream} that implements {@link DuplicatableInputStream},
+     * required by OCI SDK 3.x {@code RequestSignerImpl} for body signing.
+     */
+    private static class DuplicatableByteArrayInputStream
+            extends ByteArrayInputStream implements DuplicatableInputStream {
+
+        private final byte[] data;
+
+        DuplicatableByteArrayInputStream(byte[] data) {
+            super(data);
+            this.data = data;
+        }
+
+        @Override
+        public InputStream duplicate() {
+            return new DuplicatableByteArrayInputStream(data);
+        }
     }
 }
