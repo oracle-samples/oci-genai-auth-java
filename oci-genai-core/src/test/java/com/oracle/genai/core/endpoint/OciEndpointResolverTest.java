@@ -15,7 +15,7 @@ class OciEndpointResolverTest {
     void resolveOpenAiBaseUrl_fromRegion() {
         String url = OciEndpointResolver.resolveOpenAiBaseUrl("us-chicago-1", null, null);
         assertEquals(
-                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/openai/v1",
+                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1",
                 url);
     }
 
@@ -24,7 +24,7 @@ class OciEndpointResolverTest {
         String url = OciEndpointResolver.resolveOpenAiBaseUrl(
                 null, "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com", null);
         assertEquals(
-                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/openai/v1",
+                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1",
                 url);
     }
 
@@ -50,21 +50,21 @@ class OciEndpointResolverTest {
                 "us-chicago-1",
                 "https://custom-service.example.com",
                 null);
-        assertEquals("https://custom-service.example.com/20231130/openai/v1", url);
+        assertEquals("https://custom-service.example.com/20231130/actions/v1", url);
     }
 
     @Test
     void resolveOpenAiBaseUrl_stripsTrailingSlash() {
         String url = OciEndpointResolver.resolveOpenAiBaseUrl(
                 null, "https://service.example.com/", null);
-        assertEquals("https://service.example.com/20231130/openai/v1", url);
+        assertEquals("https://service.example.com/20231130/actions/v1", url);
     }
 
     @Test
     void resolveAnthropicBaseUrl_fromRegion() {
         String url = OciEndpointResolver.resolveAnthropicBaseUrl("us-chicago-1", null, null);
         assertEquals(
-                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/anthropic",
+                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/anthropic",
                 url);
     }
 

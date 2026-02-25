@@ -125,6 +125,7 @@ public final class AsyncOciAnthropic {
             ClientOptions clientOptions = ClientOptions.builder()
                     .httpClient(signingHttpClient)
                     .baseUrl(resolvedBaseUrl)
+                    .putHeader("anthropic-version", "2023-06-01")
                     .build();
 
             return new AnthropicClientAsyncImpl(clientOptions);

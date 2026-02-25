@@ -27,18 +27,18 @@ public final class OciEndpointResolver {
 
     /**
      * Resolves the base URL for an OpenAI-compatible endpoint.
-     * Appends {@code /openai/v1} to the service endpoint.
+     * Appends {@code /20231130/actions/v1} to the service endpoint.
      */
     public static String resolveOpenAiBaseUrl(String region, String serviceEndpoint, String baseUrl) {
-        return resolveBaseUrl(region, serviceEndpoint, baseUrl, "/20231130/openai/v1");
+        return resolveBaseUrl(region, serviceEndpoint, baseUrl, "/20231130/actions/v1");
     }
 
     /**
      * Resolves the base URL for an Anthropic-compatible endpoint.
-     * Appends {@code /20231130/anthropic} to the service endpoint.
+     * Appends {@code /anthropic} to the service endpoint.
      */
     public static String resolveAnthropicBaseUrl(String region, String serviceEndpoint, String baseUrl) {
-        return resolveBaseUrl(region, serviceEndpoint, baseUrl, "/20231130/anthropic");
+        return resolveBaseUrl(region, serviceEndpoint, baseUrl, "/anthropic");
     }
 
     /**

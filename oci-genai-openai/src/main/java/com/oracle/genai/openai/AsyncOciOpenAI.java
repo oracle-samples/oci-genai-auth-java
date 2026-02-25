@@ -129,7 +129,7 @@ public final class AsyncOciOpenAI {
             okhttp3.OkHttpClient signedOkHttpClient = OciHttpClientFactory.create(
                     resolvedAuth, compartmentId, additionalHeaders, timeout, logRequestsAndResponses);
 
-            OciSigningHttpClient signingHttpClient = new OciSigningHttpClient(signedOkHttpClient);
+            OciSigningHttpClient signingHttpClient = new OciSigningHttpClient(signedOkHttpClient, resolvedBaseUrl);
 
             ClientOptions clientOptions = ClientOptions.builder()
                     .httpClient(signingHttpClient)
