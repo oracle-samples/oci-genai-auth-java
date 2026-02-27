@@ -35,12 +35,12 @@ class GeminiIntegrationTest {
             "ocid1.tenancy.oc1..aaaaaaaaumuuscymm6yb3wsbaicfx3mjhesghplvrvamvbypyehh5pgaasna";
 
     private static final String BASE_URL =
-            "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/chat";
+            "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com/google";
 
     private static final MediaType JSON = MediaType.parse("application/json");
 
     @Test
-    @Disabled("Requires live OCI session + Gemini endpoint availability")
+    @Disabled("Requires live OCI session + Gemini endpoint availability on PPE")
     void gemini_via_direct_http() throws IOException {
         // 1. Build OCI-signed OkHttpClient
         OciAuthConfig config = OciAuthConfig.builder()
@@ -51,23 +51,27 @@ class GeminiIntegrationTest {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // 2. Build request JSON manually
+        // 2. Build request JSON (Google Gemini generateContent format)
+        String model = "google.gemini-2.5-flash";
+        String url = BASE_URL + "/v1beta/models/" + model + ":generateContent";
+
         String requestJson = """
                 {
-                  "model": "google.gemini-2.0-flash-001",
-                  "messages": [
+                  "contents": [
                     {
-                      "role": "user",
-                      "content": "What is 2 + 2? Answer in one word."
+                      "parts": [
+                        {
+                          "text": "What is 2 + 2? Answer in one word."
+                        }
+                      ]
                     }
-                  ],
-                  "max_tokens": 256
+                  ]
                 }
                 """;
 
         // 3. Send request
         Request request = new Request.Builder()
-                .url(BASE_URL)
+                .url(url)
                 .post(RequestBody.create(requestJson, JSON))
                 .build();
 
