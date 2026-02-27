@@ -11,16 +11,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.oracle.genai</groupId>
-    <artifactId>oci-genai-parent</artifactId>
+    <artifactId>oci-genai-auth-java-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>OCI GenAI SDK :: Parent</name>
+    <name>OCI GenAI Auth :: Parent</name>
     <description>
-        Unified Java SDK family for integrating third-party Generative AI providers
-        (OpenAI, Anthropic) with Oracle Cloud Infrastructure authentication and routing.
+        OCI request signing and authentication utilities for calling OCI-hosted
+        AI compatibility endpoints using any HTTP client based on OkHttp.
     </description>
-    <url>https://github.com/oracle/oci-genai-java-sdk</url>
 
     <licenses>
         <license>
@@ -30,10 +29,8 @@
     </licenses>
 
     <modules>
-        <module>oci-genai-bom</module>
-        <module>oci-genai-core</module>
-        <module>oci-genai-openai</module>
-        <module>oci-genai-anthropic</module>
+        <module>oci-genai-auth-java-bom</module>
+        <module>oci-genai-auth-java-core</module>
     </modules>
 
     <properties>
@@ -42,18 +39,13 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <!-- First-party versions -->
-        <oci-genai.version>0.1.0-SNAPSHOT</oci-genai.version>
+        <oci-genai-auth.version>0.1.0-SNAPSHOT</oci-genai-auth.version>
 
         <!-- OCI SDK -->
         <oci-sdk.version>3.57.2</oci-sdk.version>
 
-        <!-- Provider SDKs -->
-        <openai-java.version>0.40.0</openai-java.version>
-        <anthropic-java.version>2.12.0</anthropic-java.version>
-
         <!-- Shared dependencies -->
         <okhttp.version>4.12.0</okhttp.version>
-        <jackson.version>2.18.2</jackson.version>
         <slf4j.version>2.0.16</slf4j.version>
 
         <!-- Test dependencies -->
@@ -71,8 +63,8 @@
             <!-- Import the BOM for all first-party + key transitive versions -->
             <dependency>
                 <groupId>com.oracle.genai</groupId>
-                <artifactId>oci-genai-bom</artifactId>
-                <version>${oci-genai.version}</version>
+                <artifactId>oci-genai-auth-java-bom</artifactId>
+                <version>${oci-genai-auth.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
