@@ -1,47 +1,33 @@
-# OCI GenAI Unified Java SDK
+# OCI GenAI Auth for Java
 
-Unified Java SDK family for integrating third-party Generative AI providers (OpenAI, Anthropic) with Oracle Cloud Infrastructure authentication and routing.
+Vendor-neutral OCI authentication and request signing library for Java. Provides an OCI-signed `OkHttpClient` that you can plug into **any** vendor SDK or use directly with raw HTTP.
 
-## Table of Contents
+## What This Library Does
 
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-  - [OpenAI](#openai)
-  - [Anthropic](#anthropic)
-- [Authentication](#authentication)
-- [Client Configuration](#client-configuration)
-- [Async Clients](#async-clients)
-- [Base URL and Endpoint Overrides](#base-url-and-endpoint-overrides)
-- [Error Handling](#error-handling)
-- [Cleanup](#cleanup)
-- [Module Reference](#module-reference)
-- [Building from Source](#building-from-source)
-- [License](#license)
+- **OCI IAM request signing** — RSA-SHA256 signatures on every request, including body digest for POST/PUT
+- **Auth provider factory** — supports `oci_config`, `security_token`, `instance_principal`, and `resource_principal`
+- **Header injection** — automatically adds `CompartmentId` and custom headers
+- **Endpoint resolution** — derives OCI GenAI service URLs from region codes
+- **Token refresh** — handled automatically by the underlying OCI Java SDK auth providers
 
-## Architecture
+## What This Library Does NOT Do
 
-This SDK follows the **core + provider modules + BOM** pattern used by AWS SDK v2, Azure SDK for Java, Google Cloud Java, and OCI's own existing SDK. Users import only the provider modules they need — no forced dependency bloat.
+- Does **not** generate provider request/response models (no OpenAPI/codegen)
+- Does **not** wrap or re-export any vendor SDK (OpenAI, Anthropic, Gemini, etc.)
+- Does **not** include provider-specific shim classes
 
-```
-oci-genai-bom           Version management only (BOM)
-oci-genai-core          OCI IAM auth, request signing, header injection, endpoint resolution
-oci-genai-openai        Wraps openai-java SDK with OCI signing
-oci-genai-anthropic     Wraps anthropic-sdk-java with OCI signing
-```
-
-All modules share `oci-genai-core` for OCI authentication — signing logic is implemented once and applied consistently across all providers.
+This is an **auth utilities library**. Vendor SDK integration is shown in the [examples/](examples/) directory.
 
 ## Installation
 
-The SDK requires **Java 17+**. Add the BOM and the provider modules you need:
+Requires **Java 17+** and **Maven 3.8+**.
 
 ```xml
 <dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.oracle.genai</groupId>
-            <artifactId>oci-genai-bom</artifactId>
+            <artifactId>oci-genai-auth-java-bom</artifactId>
             <version>0.1.0-SNAPSHOT</version>
             <type>pom</type>
             <scope>import</scope>
@@ -50,92 +36,47 @@ The SDK requires **Java 17+**. Add the BOM and the provider modules you need:
 </dependencyManagement>
 
 <dependencies>
-    <!-- OpenAI provider (includes core transitively) -->
     <dependency>
         <groupId>com.oracle.genai</groupId>
-        <artifactId>oci-genai-openai</artifactId>
-    </dependency>
-
-    <!-- Anthropic provider (includes core transitively) -->
-    <dependency>
-        <groupId>com.oracle.genai</groupId>
-        <artifactId>oci-genai-anthropic</artifactId>
+        <artifactId>oci-genai-auth-java-core</artifactId>
     </dependency>
 </dependencies>
 ```
 
-Import only the providers you use. Each module brings in only its own dependencies.
-
 ## Quick Start
 
-### OpenAI
+### Using OciAuthConfig (recommended)
 
 ```java
-import com.openai.client.OpenAIClient;
-import com.openai.models.responses.Response;
-import com.openai.models.responses.ResponseCreateParams;
-import com.oracle.genai.openai.OciOpenAI;
+import com.oracle.genai.auth.OciAuthConfig;
+import com.oracle.genai.auth.OciOkHttpClientFactory;
+import okhttp3.OkHttpClient;
 
-public class OpenAIQuickStart {
-    public static void main(String[] args) {
-        OpenAIClient client = OciOpenAI.builder()
-                .compartmentId("<COMPARTMENT_OCID>")
-                .authType("security_token")
-                .profile("DEFAULT")
-                .region("us-chicago-1")
-                .build();
+OciAuthConfig config = OciAuthConfig.builder()
+        .authType("security_token")
+        .profile("DEFAULT")
+        .compartmentId("ocid1.compartment.oc1..xxx")
+        .build();
 
-        try {
-            Response response = client.responses().create(ResponseCreateParams.builder()
-                    .model("openai.gpt-4o")
-                    .store(false)
-                    .input("Write a short poem about cloud computing.")
-                    .build());
-
-            System.out.println(response.output());
-        } finally {
-            client.close();
-        }
-    }
-}
+OkHttpClient client = OciOkHttpClientFactory.build(config);
+// Use this client with any vendor SDK that accepts an OkHttpClient,
+// or make direct HTTP calls — every request is signed automatically.
 ```
 
-### Anthropic
+### Direct factory method
 
 ```java
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.models.messages.Message;
-import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.Model;
-import com.oracle.genai.anthropic.OciAnthropic;
+import com.oracle.genai.auth.OciAuthProviderFactory;
+import com.oracle.genai.auth.OciOkHttpClientFactory;
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 
-public class AnthropicQuickStart {
-    public static void main(String[] args) {
-        AnthropicClient client = OciAnthropic.builder()
-                .compartmentId("<COMPARTMENT_OCID>")
-                .authType("security_token")
-                .profile("DEFAULT")
-                .region("us-chicago-1")
-                .build();
+BasicAuthenticationDetailsProvider authProvider =
+        OciAuthProviderFactory.create("security_token", "DEFAULT");
 
-        try {
-            Message message = client.messages().create(MessageCreateParams.builder()
-                    .model(Model.CLAUDE_SONNET_4_20250514)
-                    .addUserMessage("Hello from OCI!")
-                    .maxTokens(1024)
-                    .build());
-
-            System.out.println(message.content());
-        } finally {
-            client.close();
-        }
-    }
-}
+OkHttpClient client = OciOkHttpClientFactory.create(authProvider, "ocid1.compartment.oc1..xxx");
 ```
 
-## Authentication
-
-Both `OciOpenAI` and `OciAnthropic` support all four OCI IAM authentication types through the `authType` parameter:
+## Authentication Types
 
 | Auth Type | Use Case |
 |-----------|----------|
@@ -145,170 +86,97 @@ Both `OciOpenAI` and `OciAnthropic` support all four OCI IAM authentication type
 | `resource_principal` | OCI Functions, Container Instances |
 
 ```java
-// 1) User principal (API key)
-OpenAIClient client = OciOpenAI.builder()
-        .authType("oci_config")
-        .profile("DEFAULT")
-        .compartmentId("<COMPARTMENT_OCID>")
-        .region("us-chicago-1")
-        .build();
-
-// 2) Session token (local dev)
-OpenAIClient client = OciOpenAI.builder()
+// Session token (local dev)
+OciAuthConfig config = OciAuthConfig.builder()
         .authType("security_token")
         .profile("DEFAULT")
         .compartmentId("<COMPARTMENT_OCID>")
-        .region("us-chicago-1")
         .build();
 
-// 3) Instance principal (OCI Compute)
-OpenAIClient client = OciOpenAI.builder()
+// Instance principal (OCI Compute)
+OciAuthConfig config = OciAuthConfig.builder()
         .authType("instance_principal")
         .compartmentId("<COMPARTMENT_OCID>")
-        .region("us-chicago-1")
-        .build();
-
-// 4) Resource principal (OCI Functions)
-OpenAIClient client = OciOpenAI.builder()
-        .authType("resource_principal")
-        .compartmentId("<COMPARTMENT_OCID>")
-        .region("us-chicago-1")
-        .build();
-
-// 5) Custom auth provider
-BasicAuthenticationDetailsProvider authProvider = /* your provider */;
-OpenAIClient client = OciOpenAI.builder()
-        .authProvider(authProvider)
-        .compartmentId("<COMPARTMENT_OCID>")
-        .region("us-chicago-1")
         .build();
 ```
 
-The same `authType` and `authProvider` parameters work identically for `OciAnthropic`.
+## Endpoint Resolution
 
-## Client Configuration
+Use `OciEndpointResolver` to derive service URLs from region codes:
+
+```java
+import com.oracle.genai.auth.OciEndpointResolver;
+
+// From region — most common
+String url = OciEndpointResolver.resolveBaseUrl("us-chicago-1", null, null, "/20231130/actions/chat");
+// → https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/chat
+
+// From service endpoint (API path appended)
+String url = OciEndpointResolver.resolveBaseUrl(null,
+        "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+        null, "/20231130/actions/chat");
+
+// From explicit base URL (used as-is)
+String url = OciEndpointResolver.resolveBaseUrl(null, null,
+        "https://custom-endpoint.example.com/v1", null);
+```
+
+Resolution priority: `baseUrl` > `serviceEndpoint` > `region`.
+
+## Configuration
 
 | Parameter | Description | Required |
 |-----------|-------------|----------|
-| `compartmentId` | OCI compartment OCID | Yes (for GenAI endpoints) |
-| `authType` or `authProvider` | Authentication mechanism | Yes |
-| `region` | OCI region code (e.g., `us-chicago-1`) | Yes (unless `baseUrl` or `serviceEndpoint` is set) |
-| `baseUrl` | Fully qualified endpoint override | No |
-| `serviceEndpoint` | Service endpoint without API path | No |
-| `conversationStoreId` | Conversation Store OCID (OpenAI only) | No |
-| `timeout` | Request timeout (default: 2 minutes) | No |
-| `logRequestsAndResponses` | Debug logging of HTTP bodies | No |
+| `authType` | OCI authentication type (see table above) | Yes |
 | `profile` | OCI config profile name (default: `DEFAULT`) | No |
+| `compartmentId` | OCI compartment OCID | Yes (for GenAI endpoints) |
+| `region` | OCI region code (e.g., `us-chicago-1`) | No (for endpoint resolution) |
+| `baseUrl` | Fully qualified endpoint override | No |
+| `timeout` | Request timeout (default: 2 minutes) | No |
 
-## Async Clients
+## Examples
 
-Both providers include async client builders that return `CompletableFuture`-based clients:
+The [examples/](examples/) directory contains standalone Java files showing how to use the OCI-signed `OkHttpClient` with different vendor SDKs:
 
-```java
-import com.oracle.genai.openai.AsyncOciOpenAI;
-import com.oracle.genai.anthropic.AsyncOciAnthropic;
+| Example | Description |
+|---------|-------------|
+| [examples/anthropic/](examples/anthropic/) | Anthropic Claude via the `anthropic-java` SDK |
+| [examples/openai/](examples/openai/) | OpenAI-compatible models via the `openai-java` SDK |
+| [examples/gemini-direct-http/](examples/gemini-direct-http/) | Google Gemini via direct OkHttp POST (no vendor SDK) |
 
-// Async OpenAI
-OpenAIClientAsync openaiAsync = AsyncOciOpenAI.builder()
-        .compartmentId("<COMPARTMENT_OCID>")
-        .authType("security_token")
-        .region("us-chicago-1")
-        .build();
-
-openaiAsync.responses().create(params)
-        .thenAccept(response -> System.out.println(response.output()));
-
-// Async Anthropic
-AnthropicClientAsync anthropicAsync = AsyncOciAnthropic.builder()
-        .compartmentId("<COMPARTMENT_OCID>")
-        .authType("security_token")
-        .region("us-chicago-1")
-        .build();
-
-anthropicAsync.messages().create(params)
-        .thenAccept(message -> System.out.println(message.content()));
-```
-
-## Base URL and Endpoint Overrides
-
-Endpoint resolution priority (highest to lowest): `baseUrl` > `serviceEndpoint` > `region`.
-
-```java
-// From region (most common)
-OciOpenAI.builder()
-        .region("us-chicago-1")
-        // resolves to: https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/openai/v1
-        ...
-
-// From service endpoint (SDK appends API path)
-OciOpenAI.builder()
-        .serviceEndpoint("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com")
-        // resolves to: https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/openai/v1
-        ...
-
-// From explicit base URL (used as-is)
-OciOpenAI.builder()
-        .baseUrl("https://custom-endpoint.example.com/v1")
-        ...
-```
-
-## Error Handling
-
-The underlying provider SDK exceptions still apply. Catch provider-specific exceptions for error handling:
-
-```java
-// OpenAI
-try {
-    Response response = client.responses().create(params);
-} catch (com.openai.errors.NotFoundException | com.openai.errors.UnauthorizedException e) {
-    System.err.println("Error: " + e.getMessage());
-}
-
-// Anthropic
-try {
-    Message message = client.messages().create(params);
-} catch (com.anthropic.errors.NotFoundException | com.anthropic.errors.UnauthorizedException e) {
-    System.err.println("Error: " + e.getMessage());
-}
-```
-
-## Cleanup
-
-Both client types implement `AutoCloseable`. Close them when finished to release HTTP resources:
-
-```java
-try (OpenAIClient client = OciOpenAI.builder()
-        .compartmentId("<COMPARTMENT_OCID>")
-        .authType("security_token")
-        .region("us-chicago-1")
-        .build()) {
-    // use client
-}
-```
+These examples are **not** compiled as part of the Maven build. Copy them into your own project.
 
 ## Module Reference
 
 | Module | Artifact | Responsibility |
 |--------|----------|----------------|
-| `oci-genai-bom` | `com.oracle.genai:oci-genai-bom` | Pins all module and transitive dependency versions |
-| `oci-genai-core` | `com.oracle.genai:oci-genai-core` | OCI IAM auth providers, per-request signing, header injection, endpoint resolution |
-| `oci-genai-openai` | `com.oracle.genai:oci-genai-openai` | Wraps `openai-java` with OCI signing via custom `HttpClient` |
-| `oci-genai-anthropic` | `com.oracle.genai:oci-genai-anthropic` | Wraps `anthropic-sdk-java` with OCI signing via custom `HttpClient` |
+| `oci-genai-auth-java-bom` | `com.oracle.genai:oci-genai-auth-java-bom` | Pins dependency versions |
+| `oci-genai-auth-java-core` | `com.oracle.genai:oci-genai-auth-java-core` | OCI IAM auth, request signing, header injection, endpoint resolution |
 
 ## Building from Source
 
-Requires Java 17+ and Maven 3.8+.
-
 ```bash
-# Compile all modules
+# Compile
 mvn clean compile
 
-# Run tests
+# Run tests (27 tests)
 mvn test
+
+# Full verification
+mvn clean verify
 
 # Install to local Maven repository
 mvn install -DskipTests
+
+# Confirm no vendor SDK dependencies
+mvn dependency:tree -pl oci-genai-auth-java-core
 ```
+
+## Design Notes
+
+- **Token refresh** is handled by OCI Java SDK auth providers (`SessionTokenAuthenticationDetailsProvider`, etc.) — no custom refresh logic needed.
+- **Spec/codegen** is a separate follow-up track. This library provides auth utilities only.
+- **Gemini example** uses direct HTTP because the Google Gemini Java SDK does not currently support transport injection.
 
 ## License
 
