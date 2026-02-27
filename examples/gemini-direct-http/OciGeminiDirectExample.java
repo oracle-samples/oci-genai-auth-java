@@ -49,7 +49,8 @@ public class OciGeminiDirectExample {
     private static final String PROFILE         = "DEFAULT";
     private static final String REGION          = "us-chicago-1";
     private static final String COMPARTMENT_ID  = "ocid1.compartment.oc1..YOUR_COMPARTMENT_ID";
-    private static final String API_PATH        = "/20231130/actions/chat";
+    private static final String API_PATH        = "/google";
+    private static final String MODEL           = "google.gemini-2.5-flash";
     // ────────────────────────────────────────────────────────────────────
 
     private static final MediaType JSON = MediaType.parse("application/json");
@@ -64,27 +65,29 @@ public class OciGeminiDirectExample {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // 2. Resolve the OCI GenAI endpoint
+        // 2. Resolve the OCI GenAI endpoint for Google Gemini
         String baseUrl = OciEndpointResolver.resolveBaseUrl(
                 REGION, null, null, API_PATH);
+        String url = baseUrl + "/v1beta/models/" + MODEL + ":generateContent";
 
-        // 3. Build the request JSON manually (Gemini/OpenAI-compatible format)
+        // 3. Build the request JSON (Google Gemini generateContent format)
         String requestJson = """
                 {
-                  "model": "google.gemini-2.0-flash-001",
-                  "messages": [
+                  "contents": [
                     {
-                      "role": "user",
-                      "content": "What is the capital of France? Answer in one sentence."
+                      "parts": [
+                        {
+                          "text": "What is the capital of France? Answer in one sentence."
+                        }
+                      ]
                     }
-                  ],
-                  "max_tokens": 256
+                  ]
                 }
                 """;
 
         // 4. Send the request using the OCI-signed OkHttpClient
         Request request = new Request.Builder()
-                .url(baseUrl)
+                .url(url)
                 .post(RequestBody.create(requestJson, JSON))
                 .build();
 
