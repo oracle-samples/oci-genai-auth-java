@@ -50,5 +50,21 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+
+        <!-- Anthropic SDK — integration test only -->
+        <dependency>
+            <groupId>com.anthropic</groupId>
+            <artifactId>anthropic-java</artifactId>
+            <version>2.12.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- OpenAI SDK — integration test only -->
+        <dependency>
+            <groupId>com.openai</groupId>
+            <artifactId>openai-java</artifactId>
+            <version>0.40.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
