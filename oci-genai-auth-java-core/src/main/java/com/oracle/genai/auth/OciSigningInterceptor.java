@@ -64,10 +64,19 @@ public class OciSigningInterceptor implements Interceptor {
         URI uri = originalRequest.url().uri();
         String method = originalRequest.method();
 
-        // Build the headers map that OCI signing expects
+        // Build the headers map that OCI signing expects.
+        // Normalize content-type to strip "; charset=utf-8" that OkHttp appends
+        // to string bodies — some OCI endpoints strip it before signature verification,
+        // causing SIGNATURE_NOT_VALID errors.
         Map<String, List<String>> existingHeaders = new HashMap<>();
         for (String name : originalRequest.headers().names()) {
-            existingHeaders.put(name, originalRequest.headers(name));
+            List<String> values = originalRequest.headers(name);
+            if ("content-type".equalsIgnoreCase(name)) {
+                values = values.stream()
+                        .map(v -> v.replaceAll(";\\s*charset=utf-8", "").trim())
+                        .toList();
+            }
+            existingHeaders.put(name, values);
         }
 
         // Read the request body for signing (OCI signs the body digest)
@@ -95,11 +104,16 @@ public class OciSigningInterceptor implements Interceptor {
             signedRequestBuilder.header(entry.getKey(), entry.getValue());
         }
 
-        // Re-attach the body (it was consumed during signing)
+        // Re-attach the body (it was consumed during signing).
+        // Use byte[] to prevent OkHttp from re-appending "; charset=utf-8".
         if (bodyBytes != null) {
             MediaType contentType = originalRequest.body() != null
                     ? originalRequest.body().contentType()
                     : MediaType.parse("application/json");
+            // Strip charset to keep content-type consistent with what was signed
+            if (contentType != null && contentType.charset() != null) {
+                contentType = MediaType.parse(contentType.type() + "/" + contentType.subtype());
+            }
             signedRequestBuilder.method(method, RequestBody.create(bodyBytes, contentType));
         }
 

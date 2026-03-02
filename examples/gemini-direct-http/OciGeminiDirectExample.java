@@ -75,6 +75,7 @@ public class OciGeminiDirectExample {
                 {
                   "contents": [
                     {
+                      "role": "user",
                       "parts": [
                         {
                           "text": "What is the capital of France? Answer in one sentence."

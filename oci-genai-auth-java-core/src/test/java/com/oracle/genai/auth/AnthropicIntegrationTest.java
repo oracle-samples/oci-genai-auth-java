@@ -33,11 +33,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration test: OCI auth library + Anthropic Java SDK against PPE endpoint.
  *
  * <p>Validates that oci-genai-auth-java-core produces a correctly signed
- * OkHttpClient that works with the Anthropic SDK out of the box.
+ * OkHttpClient that works with the Anthropic SDK.
  *
  * <p>To run:
  * <pre>
- * oci session authenticate          # refresh token
+ * oci session authenticate
  * mvn -pl oci-genai-auth-java-core test -Dtest=AnthropicIntegrationTest
  * </pre>
  */
@@ -52,7 +52,6 @@ class AnthropicIntegrationTest {
     @Test
     @Disabled("Requires live OCI session — run: oci session authenticate")
     void anthropic_via_oci_auth_library() {
-        // 1. Build OCI-signed OkHttpClient using the auth library
         OciAuthConfig config = OciAuthConfig.builder()
                 .authType("security_token")
                 .profile("DEFAULT")
@@ -61,7 +60,6 @@ class AnthropicIntegrationTest {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // 2. Wrap in Anthropic HttpClient adapter and build client
         HttpClient signingHttpClient = new AnthropicOkHttpAdapter(ociHttpClient);
 
         ClientOptions clientOptions = ClientOptions.builder()
@@ -73,14 +71,12 @@ class AnthropicIntegrationTest {
         AnthropicClient client = new AnthropicClientImpl(clientOptions);
 
         try {
-            // 3. Send a request
             Message message = client.messages().create(MessageCreateParams.builder()
                     .model("anthropic.claude-haiku-4-5")
                     .maxTokens(256)
                     .addUserMessage("What is 2 + 2? Answer in one word.")
                     .build());
 
-            // 4. Verify response
             assertNotNull(message, "Response should not be null");
             assertFalse(message.content().isEmpty(), "Response should have content");
 
@@ -96,8 +92,7 @@ class AnthropicIntegrationTest {
     }
 
     /**
-     * Minimal adapter: bridges Anthropic SDK's HttpClient to OCI-signed OkHttpClient.
-     * This is the glue code consumers write (or copy from examples/).
+     * Adapter: bridges Anthropic SDK's HttpClient to OCI-signed OkHttpClient.
      */
     private static class AnthropicOkHttpAdapter implements HttpClient {
 
