@@ -40,9 +40,8 @@ class GeminiIntegrationTest {
     private static final MediaType JSON = MediaType.parse("application/json");
 
     @Test
-    @Disabled("Requires live OCI session + Gemini endpoint availability on PPE")
+    @Disabled("Requires live OCI session — run: oci session authenticate")
     void gemini_via_direct_http() throws IOException {
-        // 1. Build OCI-signed OkHttpClient
         OciAuthConfig config = OciAuthConfig.builder()
                 .authType("security_token")
                 .profile("DEFAULT")
@@ -51,7 +50,6 @@ class GeminiIntegrationTest {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // 2. Build request JSON (Google Gemini generateContent format)
         String model = "google.gemini-2.5-flash";
         String url = BASE_URL + "/v1beta/models/" + model + ":generateContent";
 
@@ -59,6 +57,7 @@ class GeminiIntegrationTest {
                 {
                   "contents": [
                     {
+                      "role": "user",
                       "parts": [
                         {
                           "text": "What is 2 + 2? Answer in one word."
@@ -69,21 +68,17 @@ class GeminiIntegrationTest {
                 }
                 """;
 
-        // 3. Send request
         Request request = new Request.Builder()
                 .url(url)
                 .post(RequestBody.create(requestJson, JSON))
                 .build();
 
         try (Response response = ociHttpClient.newCall(request).execute()) {
-            System.out.println("Gemini status: " + response.code());
             String body = response.body() != null ? response.body().string() : "";
-            System.out.println("Gemini response: " + body);
+            System.out.println("Gemini response (" + response.code() + "): " + body);
 
-            // Accept 200 (success) or 4xx (model not available on PPE) —
-            // the key validation is that we don't get 401 (auth works)
-            assertNotEquals(401, response.code(), "Should not get 401 — auth signing should work");
-            assertNotEquals(403, response.code(), "Should not get 403 — auth signing should work");
+            assertNotEquals(401, response.code(), "Auth signing should work");
+            assertNotEquals(403, response.code(), "Auth signing should work");
         }
     }
 }
