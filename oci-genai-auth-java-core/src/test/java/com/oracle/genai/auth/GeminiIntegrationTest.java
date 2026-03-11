@@ -32,10 +32,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class GeminiIntegrationTest {
 
     private static final String COMPARTMENT_ID =
-            "ocid1.tenancy.oc1..aaaaaaaaumuuscymm6yb3wsbaicfx3mjhesghplvrvamvbypyehh5pgaasna";
+            System.getenv().getOrDefault("OCI_COMPARTMENT_ID", "");
 
     private static final String BASE_URL =
-            "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com/google";
+            System.getenv().getOrDefault("OCI_GENAI_ENDPOINT",
+                    "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com")
+            + "/google";
 
     private static final MediaType JSON = MediaType.parse("application/json");
 

@@ -116,9 +116,9 @@ String url = OciEndpointResolver.resolveBaseUrl(null,
         "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
         null, "/20231130/actions/chat");
 
-// From explicit base URL (used as-is)
+// From explicit base URL (used as-is; must be an OCI HTTPS URL)
 String url = OciEndpointResolver.resolveBaseUrl(null, null,
-        "https://custom-endpoint.example.com/v1", null);
+        "https://custom-endpoint.oci.oraclecloud.com/v1", null);
 ```
 
 Resolution priority: `baseUrl` > `serviceEndpoint` > `region`.
@@ -131,7 +131,7 @@ Resolution priority: `baseUrl` > `serviceEndpoint` > `region`.
 | `profile` | OCI config profile name (default: `DEFAULT`) | No |
 | `compartmentId` | OCI compartment OCID | Yes (for GenAI endpoints) |
 | `region` | OCI region code (e.g., `us-chicago-1`) | No (for endpoint resolution) |
-| `baseUrl` | Fully qualified endpoint override | No |
+| `baseUrl` | Fully qualified OCI endpoint override (`*.oraclecloud.com`) | No |
 | `timeout` | Request timeout (default: 2 minutes) | No |
 
 ## Examples

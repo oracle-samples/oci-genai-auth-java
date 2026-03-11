@@ -31,35 +31,82 @@ class OciEndpointResolverTest {
     @Test
     void resolveBaseUrl_fromBaseUrl() {
         String url = OciEndpointResolver.resolveBaseUrl(
-                null, null, "https://custom-endpoint.example.com/v1", "/ignored");
-        assertEquals("https://custom-endpoint.example.com/v1", url);
+                null, null, "https://custom-endpoint.oci.oraclecloud.com/v1", "/ignored");
+        assertEquals("https://custom-endpoint.oci.oraclecloud.com/v1", url);
     }
 
     @Test
     void resolveBaseUrl_baseUrlTakesPrecedence() {
         String url = OciEndpointResolver.resolveBaseUrl(
                 "us-chicago-1",
-                "https://service.example.com",
-                "https://override.example.com/v1",
+                "https://service.oci.oraclecloud.com",
+                "https://override.oci.oraclecloud.com/v1",
                 "/v1/test");
-        assertEquals("https://override.example.com/v1", url);
+        assertEquals("https://override.oci.oraclecloud.com/v1", url);
     }
 
     @Test
     void resolveBaseUrl_serviceEndpointTakesPrecedenceOverRegion() {
         String url = OciEndpointResolver.resolveBaseUrl(
                 "us-chicago-1",
-                "https://custom-service.example.com",
+                "https://custom-service.oci.oraclecloud.com",
                 null,
                 "/v1/test");
-        assertEquals("https://custom-service.example.com/v1/test", url);
+        assertEquals("https://custom-service.oci.oraclecloud.com/v1/test", url);
     }
 
     @Test
     void resolveBaseUrl_stripsTrailingSlash() {
         String url = OciEndpointResolver.resolveBaseUrl(
-                null, "https://service.example.com/", null, "/v1/test");
-        assertEquals("https://service.example.com/v1/test", url);
+                null, "https://service.oraclecloud.com/", null, "/v1/test");
+        assertEquals("https://service.oraclecloud.com/v1/test", url);
+    }
+
+    @Test
+    void resolveBaseUrl_serviceEndpointRejectsNonOciDomain() {
+        assertThrows(IllegalArgumentException.class, () ->
+                OciEndpointResolver.resolveBaseUrl(
+                        null, "https://evil.example.com", null, "/v1/test"));
+    }
+
+    @Test
+    void resolveBaseUrl_serviceEndpointAcceptsPpeDomain() {
+        String url = OciEndpointResolver.resolveBaseUrl(
+                null,
+                "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+                null,
+                "/v1/test");
+        assertEquals(
+                "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com/v1/test",
+                url);
+    }
+
+    @Test
+    void resolveBaseUrl_baseUrlRejectsNonOciDomain() {
+        assertThrows(IllegalArgumentException.class, () ->
+                OciEndpointResolver.resolveBaseUrl(
+                        null, null, "https://custom-proxy.example.com/v1", "/ignored"));
+    }
+
+    @Test
+    void resolveBaseUrl_baseUrlRejectsMissingHost() {
+        assertThrows(IllegalArgumentException.class, () ->
+                OciEndpointResolver.resolveBaseUrl(
+                        null, null, "https://", "/ignored"));
+    }
+
+    @Test
+    void resolveBaseUrl_baseUrlRejectsUserInfo() {
+        assertThrows(IllegalArgumentException.class, () ->
+                OciEndpointResolver.resolveBaseUrl(
+                        null, null, "https://user:pass@inference.generativeai.us-chicago-1.oci.oraclecloud.com/v1", "/ignored"));
+    }
+
+    @Test
+    void resolveBaseUrl_serviceEndpointRejectsMissingHost() {
+        assertThrows(IllegalArgumentException.class, () ->
+                OciEndpointResolver.resolveBaseUrl(
+                        null, "https://", null, "/v1/test"));
     }
 
     @Test

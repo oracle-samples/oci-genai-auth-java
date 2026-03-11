@@ -63,7 +63,7 @@
         <dependency>
             <groupId>com.openai</groupId>
             <artifactId>openai-java</artifactId>
-            <version>0.40.0</version>
+            <version>4.26.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

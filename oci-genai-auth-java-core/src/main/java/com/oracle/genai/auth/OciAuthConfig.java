@@ -83,7 +83,7 @@ public final class OciAuthConfig {
         /** Sets the OCI region code (e.g., {@code "us-chicago-1"}). */
         public Builder region(String region) { this.region = region; return this; }
 
-        /** Sets the fully qualified base URL (overrides region-based resolution). */
+        /** Sets the fully qualified OCI base URL (overrides region-based resolution). */
         public Builder baseUrl(String baseUrl) { this.baseUrl = baseUrl; return this; }
 
         /** Sets the OCI compartment OCID. */
