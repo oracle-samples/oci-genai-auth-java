@@ -20,3 +20,10 @@ dependency-reduced-pom.xml
 
 # Logs
 *.log
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Scratch files
+scratch/

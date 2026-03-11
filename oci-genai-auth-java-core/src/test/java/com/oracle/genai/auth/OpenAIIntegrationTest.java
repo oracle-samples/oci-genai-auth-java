@@ -41,10 +41,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class OpenAIIntegrationTest {
 
     private static final String COMPARTMENT_ID =
-            "ocid1.tenancy.oc1..aaaaaaaaumuuscymm6yb3wsbaicfx3mjhesghplvrvamvbypyehh5pgaasna";
+            System.getenv().getOrDefault("OCI_COMPARTMENT_ID", "");
 
     private static final String BASE_URL =
-            "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1";
+            System.getenv().getOrDefault("OCI_GENAI_ENDPOINT",
+                    "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com")
+            + "/20231130/actions/v1";
 
     @Test
     @Disabled("Requires live OCI session — run: oci session authenticate")

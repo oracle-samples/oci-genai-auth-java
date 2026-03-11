@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Factory for creating OkHttp clients pre-configured with OCI signing and header interceptors.
@@ -36,6 +37,10 @@ public final class OciOkHttpClientFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(OciOkHttpClientFactory.class);
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(2);
+
+    /** Headers that are redacted from debug logging to prevent credential leakage. */
+    private static final Set<String> REDACTED_HEADERS = Set.of(
+            "authorization", "x-content-sha256", "opc-request-id");
 
     private OciOkHttpClientFactory() {
         // utility class
@@ -86,8 +91,19 @@ public final class OciOkHttpClientFactory {
 
         if (logRequests) {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(
-                    message -> LOG.debug("{}", message));
-            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+                    message -> {
+                        // Redact sensitive headers (Authorization, x-content-sha256)
+                        // to prevent OCI signing credentials from appearing in logs.
+                        String redacted = message;
+                        for (String header : REDACTED_HEADERS) {
+                            if (redacted.toLowerCase().startsWith(header + ":")) {
+                                redacted = header + ": [REDACTED]";
+                                break;
+                            }
+                        }
+                        LOG.debug("{}", redacted);
+                    });
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
             builder.addInterceptor(loggingInterceptor);
         }
 

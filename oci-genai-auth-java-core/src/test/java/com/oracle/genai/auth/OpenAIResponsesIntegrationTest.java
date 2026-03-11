@@ -5,18 +5,18 @@
  */
 package com.oracle.genai.auth;
 
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.AnthropicClientImpl;
-import com.anthropic.core.ClientOptions;
-import com.anthropic.core.RequestOptions;
-import com.anthropic.core.http.HttpClient;
-import com.anthropic.core.http.HttpRequest;
-import com.anthropic.core.http.HttpRequestBody;
-import com.anthropic.core.http.HttpResponse;
-import com.anthropic.core.http.Headers;
-import com.anthropic.models.messages.ContentBlock;
-import com.anthropic.models.messages.Message;
-import com.anthropic.models.messages.MessageCreateParams;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientImpl;
+import com.openai.core.ClientOptions;
+import com.openai.core.RequestOptions;
+import com.openai.core.http.HttpClient;
+import com.openai.core.http.HttpRequest;
+import com.openai.core.http.HttpRequestBody;
+import com.openai.core.http.HttpResponse;
+import com.openai.core.http.Headers;
+import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.ResponseOutputItem;
 import okhttp3.*;
 import okio.BufferedSink;
 import org.junit.jupiter.api.Disabled;
@@ -25,23 +25,24 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration test: OCI auth library + Anthropic Java SDK against PPE endpoint.
+ * Integration test: OCI auth library + OpenAI Responses API against PPE endpoint.
  *
- * <p>Validates that oci-genai-auth-java-core produces a correctly signed
- * OkHttpClient that works with the Anthropic SDK.
+ * <p>Tests the Responses API (newer replacement for Chat Completions) which supports
+ * compaction for long-running conversations.
  *
  * <p>To run:
  * <pre>
  * oci session authenticate
- * mvn -pl oci-genai-auth-java-core test -Dtest=AnthropicIntegrationTest
+ * mvn -pl oci-genai-auth-java-core test -Dtest=OpenAIResponsesIntegrationTest
  * </pre>
  */
-class AnthropicIntegrationTest {
+class OpenAIResponsesIntegrationTest {
 
     private static final String COMPARTMENT_ID =
             System.getenv().getOrDefault("OCI_COMPARTMENT_ID", "");
@@ -49,11 +50,12 @@ class AnthropicIntegrationTest {
     private static final String BASE_URL =
             System.getenv().getOrDefault("OCI_GENAI_ENDPOINT",
                     "https://ppe.inference.generativeai.us-chicago-1.oci.oraclecloud.com")
-            + "/anthropic";
+            + "/20231130/actions/v1";
 
     @Test
     @Disabled("Requires live OCI session — run: oci session authenticate")
-    void anthropic_via_oci_auth_library() {
+    void responses_api_via_oci_auth_library() {
+        // 1. Build OCI-signed OkHttpClient
         OciAuthConfig config = OciAuthConfig.builder()
                 .authType("security_token")
                 .profile("DEFAULT")
@@ -62,30 +64,40 @@ class AnthropicIntegrationTest {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        HttpClient signingHttpClient = new AnthropicOkHttpAdapter(ociHttpClient);
+        // 2. Wrap in OpenAI HttpClient adapter and build client
+        HttpClient signingHttpClient = new OpenAIOkHttpAdapter(ociHttpClient, BASE_URL);
 
         ClientOptions clientOptions = ClientOptions.builder()
                 .httpClient(signingHttpClient)
                 .baseUrl(BASE_URL)
-                .putHeader("anthropic-version", "2023-06-01")
+                .apiKey("OCI_AUTH")
                 .build();
 
-        AnthropicClient client = new AnthropicClientImpl(clientOptions);
+        OpenAIClient client = new OpenAIClientImpl(clientOptions);
 
         try {
-            Message message = client.messages().create(MessageCreateParams.builder()
-                    .model("anthropic.claude-haiku-4-5")
-                    .maxTokens(256)
-                    .addUserMessage("What is 2 + 2? Answer in one word.")
-                    .build());
+            // 3. Send a Responses API request
+            ResponseCreateParams params = ResponseCreateParams.builder()
+                    .model("xai.grok-3")
+                    .input("What is 2 + 2? Answer in one word.")
+                    .build();
 
-            assertNotNull(message, "Response should not be null");
-            assertFalse(message.content().isEmpty(), "Response should have content");
+            Response response = client.responses().create(params);
 
-            for (ContentBlock block : message.content()) {
-                block.text().ifPresent(textBlock -> {
-                    System.out.println("Anthropic response: " + textBlock.text());
-                    assertFalse(textBlock.text().isBlank(), "Response text should not be blank");
+            // 4. Verify response
+            assertNotNull(response, "Response should not be null");
+            assertNotNull(response.output(), "Output should not be null");
+            assertFalse(response.output().isEmpty(), "Output should not be empty");
+
+            // 5. Extract text from output
+            for (ResponseOutputItem item : response.output()) {
+                item.message().ifPresent(message -> {
+                    for (var content : message.content()) {
+                        content.outputText().ifPresent(text -> {
+                            System.out.println("Responses API output: " + text.text());
+                            assertFalse(text.text().isBlank(), "Response text should not be blank");
+                        });
+                    }
                 });
             }
         } finally {
@@ -94,22 +106,25 @@ class AnthropicIntegrationTest {
     }
 
     /**
-     * Adapter: bridges Anthropic SDK's HttpClient to OCI-signed OkHttpClient.
+     * Minimal adapter: bridges OpenAI SDK's HttpClient to OCI-signed OkHttpClient.
+     * The OpenAI SDK uses pathSegments instead of full URLs, so we need baseUrl.
      */
-    private static class AnthropicOkHttpAdapter implements HttpClient {
+    private static class OpenAIOkHttpAdapter implements HttpClient {
 
         private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json");
         private final OkHttpClient okHttpClient;
+        private final HttpUrl baseUrl;
 
-        AnthropicOkHttpAdapter(OkHttpClient okHttpClient) {
+        OpenAIOkHttpAdapter(OkHttpClient okHttpClient, String baseUrl) {
             this.okHttpClient = okHttpClient;
+            this.baseUrl = HttpUrl.parse(baseUrl);
         }
 
         @Override
         public HttpResponse execute(HttpRequest request, RequestOptions requestOptions) {
             Request okRequest = toOkHttpRequest(request);
             try {
-                Response okResponse = okHttpClient.newCall(okRequest).execute();
+                okhttp3.Response okResponse = okHttpClient.newCall(okRequest).execute();
                 return new OkHttpResponseAdapter(okResponse);
             } catch (IOException e) {
                 throw new RuntimeException("OCI request failed: " + request.url(), e);
@@ -128,7 +143,7 @@ class AnthropicIntegrationTest {
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) {
+                public void onResponse(Call call, okhttp3.Response response) {
                     future.complete(new OkHttpResponseAdapter(response));
                 }
             });
@@ -142,12 +157,22 @@ class AnthropicIntegrationTest {
         }
 
         private Request toOkHttpRequest(HttpRequest request) {
-            HttpUrl parsedUrl = HttpUrl.parse(request.url());
-            if (parsedUrl == null) {
-                throw new IllegalArgumentException("Invalid URL: " + request.url());
+            HttpUrl.Builder urlBuilder;
+            String url = request.url();
+            if (url != null && !url.isBlank()) {
+                HttpUrl parsedUrl = HttpUrl.parse(url);
+                if (parsedUrl == null) throw new IllegalArgumentException("Invalid URL: " + url);
+                urlBuilder = parsedUrl.newBuilder();
+            } else {
+                urlBuilder = baseUrl.newBuilder();
+                List<String> pathSegments = request.pathSegments();
+                if (pathSegments != null) {
+                    for (String segment : pathSegments) {
+                        urlBuilder.addPathSegment(segment);
+                    }
+                }
             }
 
-            HttpUrl.Builder urlBuilder = parsedUrl.newBuilder();
             var queryParams = request.queryParams();
             for (String key : queryParams.keys()) {
                 for (String value : queryParams.values(key)) {
@@ -158,9 +183,6 @@ class AnthropicIntegrationTest {
             okhttp3.Headers.Builder headersBuilder = new okhttp3.Headers.Builder();
             var headers = request.headers();
             for (String name : headers.names()) {
-                if ("x-api-key".equalsIgnoreCase(name) || "authorization".equalsIgnoreCase(name)) {
-                    continue;
-                }
                 for (String value : headers.values(name)) {
                     headersBuilder.add(name, value);
                 }
@@ -198,10 +220,10 @@ class AnthropicIntegrationTest {
         }
 
         private static class OkHttpResponseAdapter implements HttpResponse {
-            private final Response response;
+            private final okhttp3.Response response;
             private final Headers headers;
 
-            OkHttpResponseAdapter(Response response) {
+            OkHttpResponseAdapter(okhttp3.Response response) {
                 this.response = response;
                 Headers.Builder builder = Headers.builder();
                 for (String name : response.headers().names()) {
