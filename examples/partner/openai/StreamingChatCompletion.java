@@ -27,7 +27,7 @@ public class StreamingChatCompletion {
     // ────────────────────────────────────────────────────────────────────
 
     private static final String BASE_URL =
-            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/v1";
+            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/20231130/actions/v1";
 
     public static void main(String[] args) {
         OciAuthConfig config = OciAuthConfig.builder()
