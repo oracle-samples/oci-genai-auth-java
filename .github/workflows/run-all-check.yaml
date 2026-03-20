@@ -1,0 +1,33 @@
+# This workflow will install Java dependencies, run tests and lint
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+name: Unit test and build check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: ["17", "21"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+          cache: maven
+      - name: Build and test
+        run: mvn clean verify --batch-mode --no-transfer-progress
+      - name: Verify no vendor SDK in compile scope
+        run: |
+          mvn dependency:tree -pl oci-genai-auth-java-core --batch-mode --no-transfer-progress | \
+            grep -v "test" | grep -v "INFO" | grep -v "WARNING" | \
+            (! grep -E "anthropic|openai|google-cloud")
