@@ -1,3 +1,6 @@
+# Mac
+.DS_Store
+
 # Build output
 target/
 
@@ -10,9 +13,9 @@ target/
 .vscode/
 *.swp
 *.swo
+*.orig
 
 # OS files
-.DS_Store
 Thumbs.db
 
 # Maven
@@ -20,6 +23,10 @@ dependency-reduced-pom.xml
 
 # Logs
 *.log
+
+# Environments
+.env
+.envrc
 
 # Claude Code
 CLAUDE.md

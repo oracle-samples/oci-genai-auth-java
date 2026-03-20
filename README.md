@@ -1,22 +1,41 @@
-# OCI GenAI Auth for Java
+# oci-genai-auth-java
 
-Vendor-neutral OCI authentication and request signing library for Java. Provides an OCI-signed `OkHttpClient` that you can plug into **any** vendor SDK or use directly with raw HTTP.
+The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the OpenAI-compatible REST APIs hosted by OCI Generative AI. Partner/Passthrough endpoints do not store conversation history on OCI servers, while AgentHub (non-passthrough) stores data on OCI-managed servers.
 
-## What This Library Does
+## Table of Contents
 
-- **OCI IAM request signing** — RSA-SHA256 signatures on every request, including body digest for POST/PUT
-- **Auth provider factory** — supports `oci_config`, `security_token`, `instance_principal`, and `resource_principal`
-- **Header injection** — automatically adds `CompartmentId` and custom headers
-- **Endpoint resolution** — derives OCI GenAI service URLs from region codes
-- **Token refresh** — handled automatically by the underlying OCI Java SDK auth providers
+- [Before you start](#before-you-start)
+- [Using OCI IAM Auth](#using-oci-iam-auth)
+- [Using API Key Auth](#using-api-key-auth)
+- [Using AgentHub APIs (non-passthrough)](#using-agenthub-apis-non-passthrough)
+- [Using Partner APIs (passthrough)](#using-partner-apis-passthrough)
+- [Running the Examples](#running-the-examples)
+- [Building from Source](#building-from-source)
 
-## What This Library Does NOT Do
+## Before you start
 
-- Does **not** generate provider request/response models (no OpenAPI/codegen)
-- Does **not** wrap or re-export any vendor SDK (OpenAI, Anthropic, Gemini, etc.)
-- Does **not** include provider-specific shim classes
+**Important!**
 
-This is an **auth utilities library**. Vendor SDK integration is shown in the [examples/](examples/) directory.
+Note that this package, as well as API keys described below, only supports OpenAI, xAi Grok and Meta LLama models on OCI Generative AI.
+
+Before you start using this package, determine if this is the right option for you.
+
+If you are looking for a seamless way to port your code from an OpenAI compatible endpoint to OCI Generative AI endpoint, and you are currently using OpenAI-style API keys, you might want to use [OCI Generative AI API Keys](https://docs.oracle.com/en-us/iaas/Content/generative-ai/api-keys.htm) instead.
+
+With OCI Generative AI API Keys, use the native `openai-java` SDK like before. Just update the `base_url`, create API keys in your OCI console, ensure the policy granting the key access to generative AI services is present and you are good to go.
+
+- Create an API key in Console: **Generative AI** -> **API Keys**
+- Create a security policy: **Identity & Security** -> **Policies**
+
+To authorize a specific API Key
+```
+allow any-user to use generative-ai-family in compartment <compartment-name> where ALL { request.principal.type='generativeaiapikey', request.principal.id='ocid1.generativeaiapikey.oc1.us-chicago-1....' }
+```
+
+To authorize any API Key
+```
+allow any-user to use generative-ai-family in compartment <compartment-name> where ALL { request.principal.type='generativeaiapikey' }
+```
 
 ## Installation
 
@@ -43,37 +62,90 @@ Requires **Java 17+** and **Maven 3.8+**.
 </dependencies>
 ```
 
-## Quick Start
+## Using OCI IAM Auth
 
-### Using OciAuthConfig (recommended)
+Use OCI IAM auth when you want to sign requests with your OCI profile (session/user/resource/instance principal) instead of API keys.
 
 ```java
 import com.oracle.genai.auth.OciAuthConfig;
 import com.oracle.genai.auth.OciOkHttpClientFactory;
-import okhttp3.OkHttpClient;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientImpl;
+import com.openai.core.ClientOptions;
 
 OciAuthConfig config = OciAuthConfig.builder()
         .authType("security_token")
         .profile("DEFAULT")
-        .compartmentId("ocid1.compartment.oc1..xxx")
+        .compartmentId("ocid1.compartment.oc1..aaaaaaaaexample")
         .build();
 
-OkHttpClient client = OciOkHttpClientFactory.build(config);
-// Use this client with any vendor SDK that accepts an OkHttpClient,
-// or make direct HTTP calls — every request is signed automatically.
+OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
+
+// Plug the OCI-signed OkHttpClient into the OpenAI SDK
+OpenAIClient client = new OpenAIClientImpl(
+        ClientOptions.builder()
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/v1")
+                .apiKey("not-used")
+                .httpClient(new OpenAIOkHttpAdapter(ociHttpClient, baseUrl))
+                .build());
 ```
 
-### Direct factory method
+## Using API Key Auth
+
+Use OCI Generative AI API Keys if you want a direct API-key workflow with the OpenAI SDK.
 
 ```java
-import com.oracle.genai.auth.OciAuthProviderFactory;
-import com.oracle.genai.auth.OciOkHttpClientFactory;
-import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientImpl;
+import com.openai.core.ClientOptions;
 
-BasicAuthenticationDetailsProvider authProvider =
-        OciAuthProviderFactory.create("security_token", "DEFAULT");
+OpenAIClient client = new OpenAIClientImpl(
+        ClientOptions.builder()
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
+                .apiKey(System.getenv("OPENAI_API_KEY"))
+                .build());
+```
 
-OkHttpClient client = OciOkHttpClientFactory.create(authProvider, "ocid1.compartment.oc1..xxx");
+## Using AgentHub APIs (non-passthrough)
+
+AgentHub runs in non-pass-through mode and provides a unified interface for interacting with models and agentic capabilities. It is compatible with OpenAI's Responses API and the Open Responses Spec, enabling developers to build agents with the OpenAI SDK. Only the project OCID is required.
+
+```java
+OciAuthConfig config = OciAuthConfig.builder()
+        .authType("security_token")
+        .profile("DEFAULT")
+        .build();
+
+OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
+
+OpenAIClient client = new OpenAIClientImpl(
+        ClientOptions.builder()
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
+                .apiKey("not-used")
+                .httpClient(new OpenAIOkHttpAdapter(ociHttpClient, baseUrl))
+                .build());
+```
+
+## Using Partner APIs (passthrough)
+
+Partner endpoints run in pass-through mode and require the compartment OCID header.
+
+```java
+OciAuthConfig config = OciAuthConfig.builder()
+        .authType("security_token")
+        .profile("DEFAULT")
+        .compartmentId("ocid1.compartment.oc1..aaaaaaaaexample")
+        .build();
+
+OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
+
+// The compartment ID is automatically injected as a header by the library
+OpenAIClient client = new OpenAIClientImpl(
+        ClientOptions.builder()
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/v1")
+                .apiKey("not-used")
+                .httpClient(new OpenAIOkHttpAdapter(ociHttpClient, baseUrl))
+                .build());
 ```
 
 ## Authentication Types
@@ -85,73 +157,20 @@ OkHttpClient client = OciOkHttpClientFactory.create(authProvider, "ocid1.compart
 | `instance_principal` | OCI Compute instances with dynamic group policies |
 | `resource_principal` | OCI Functions, Container Instances |
 
-```java
-// Session token (local dev)
-OciAuthConfig config = OciAuthConfig.builder()
-        .authType("security_token")
-        .profile("DEFAULT")
-        .compartmentId("<COMPARTMENT_OCID>")
-        .build();
+## Running the Examples
 
-// Instance principal (OCI Compute)
-OciAuthConfig config = OciAuthConfig.builder()
-        .authType("instance_principal")
-        .compartmentId("<COMPARTMENT_OCID>")
-        .build();
-```
+1. Update the constants in each example with your `COMPARTMENT_ID`, `PROJECT_OCID`, and set the correct `REGION`.
+2. Set the `OPENAI_API_KEY` environment variable when an example uses API key authentication.
+3. Install dependencies: `mvn install -DskipTests`.
 
-## Endpoint Resolution
+The [examples/](examples/) directory is organized as follows:
 
-Use `OciEndpointResolver` to derive service URLs from region codes:
-
-```java
-import com.oracle.genai.auth.OciEndpointResolver;
-
-// From region — most common
-String url = OciEndpointResolver.resolveBaseUrl("us-chicago-1", null, null, "/20231130/actions/chat");
-// → https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/chat
-
-// From service endpoint (API path appended)
-String url = OciEndpointResolver.resolveBaseUrl(null,
-        "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
-        null, "/20231130/actions/chat");
-
-// From explicit base URL (used as-is; must be an OCI HTTPS URL)
-String url = OciEndpointResolver.resolveBaseUrl(null, null,
-        "https://custom-endpoint.oci.oraclecloud.com/v1", null);
-```
-
-Resolution priority: `baseUrl` > `serviceEndpoint` > `region`.
-
-## Configuration
-
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `authType` | OCI authentication type (see table above) | Yes |
-| `profile` | OCI config profile name (default: `DEFAULT`) | No |
-| `compartmentId` | OCI compartment OCID | Yes (for GenAI endpoints) |
-| `region` | OCI region code (e.g., `us-chicago-1`) | No (for endpoint resolution) |
-| `baseUrl` | Fully qualified OCI endpoint override (`*.oraclecloud.com`) | No |
-| `timeout` | Request timeout (default: 2 minutes) | No |
-
-## Examples
-
-The [examples/](examples/) directory contains standalone Java files showing how to use the OCI-signed `OkHttpClient` with different vendor SDKs:
-
-| Example | Description |
-|---------|-------------|
-| [examples/anthropic/](examples/anthropic/) | Anthropic Claude via the `anthropic-java` SDK |
-| [examples/openai/](examples/openai/) | OpenAI-compatible models via the `openai-java` SDK |
-| [examples/gemini-direct-http/](examples/gemini-direct-http/) | Google Gemini via direct OkHttp POST (no vendor SDK) |
+| Directory | Description |
+|-----------|-------------|
+| [examples/agenthub/openai/](examples/agenthub/openai/) | AgentHub (non-passthrough) examples using the OpenAI Responses API |
+| [examples/partner/openai/](examples/partner/openai/) | Partner (passthrough) examples using OpenAI Chat Completions |
 
 These examples are **not** compiled as part of the Maven build. Copy them into your own project.
-
-## Module Reference
-
-| Module | Artifact | Responsibility |
-|--------|----------|----------------|
-| `oci-genai-auth-java-bom` | `com.oracle.genai:oci-genai-auth-java-bom` | Pins dependency versions |
-| `oci-genai-auth-java-core` | `com.oracle.genai:oci-genai-auth-java-core` | OCI IAM auth, request signing, header injection, endpoint resolution |
 
 ## Building from Source
 
@@ -159,7 +178,7 @@ These examples are **not** compiled as part of the Maven build. Copy them into y
 # Compile
 mvn clean compile
 
-# Run tests (27 tests)
+# Run tests
 mvn test
 
 # Full verification
@@ -171,12 +190,6 @@ mvn install -DskipTests
 # Confirm no vendor SDK dependencies
 mvn dependency:tree -pl oci-genai-auth-java-core
 ```
-
-## Design Notes
-
-- **Token refresh** is handled by OCI Java SDK auth providers (`SessionTokenAuthenticationDetailsProvider`, etc.) — no custom refresh logic needed.
-- **Spec/codegen** is a separate follow-up track. This library provides auth utilities only.
-- **Gemini example** uses direct HTTP because the Google Gemini Java SDK does not currently support transport injection.
 
 ## License
 
