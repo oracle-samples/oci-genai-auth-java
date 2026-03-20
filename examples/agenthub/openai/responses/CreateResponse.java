@@ -37,10 +37,12 @@ public class CreateResponse {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
+        // AgentHub only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl(BASE_URL)
                 .okHttpClient(ociHttpClient)
                 .apiKey("not-used")
+                .addHeader("openai-project", PROJECT_OCID)
                 .build();
 
         Response response = client.responses().create(
