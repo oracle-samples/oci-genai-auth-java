@@ -1,14 +1,14 @@
 # oci-genai-auth-java
 
-The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the OpenAI-compatible REST APIs hosted by OCI Generative AI. Partner/Passthrough endpoints do not store conversation history on OCI servers, while AgentHub (non-passthrough) stores data on OCI-managed servers.
+The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the OpenAI-compatible REST APIs hosted by OCI Generative AI.
 
 ## Table of Contents
 
 - [Before you start](#before-you-start)
 - [Using OCI IAM Auth](#using-oci-iam-auth)
 - [Using API Key Auth](#using-api-key-auth)
-- [Using AgentHub APIs (non-passthrough)](#using-agenthub-apis-non-passthrough)
-- [Using Partner APIs (passthrough)](#using-partner-apis-passthrough)
+- [Using AgentHub APIs](#using-agenthub-apis)
+- [Using Partner APIs](#using-partner-apis)
 - [Running the Examples](#running-the-examples)
 - [Building from Source](#building-from-source)
 
@@ -84,7 +84,7 @@ OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 // Plug the OCI-signed OkHttpClient into the OpenAI SDK
 OpenAIClient client = new OpenAIClientImpl(
         ClientOptions.builder()
-                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/v1")
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1")
                 .apiKey("not-used")
                 .httpClient(new OpenAIOkHttpAdapter(ociHttpClient, baseUrl))
                 .build());
@@ -102,13 +102,13 @@ import com.openai.core.ClientOptions;
 OpenAIClient client = new OpenAIClientImpl(
         ClientOptions.builder()
                 .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
-                .apiKey(System.getenv("OPENAI_API_KEY"))
+                .apiKey(System.getenv("OCI_GENAI_API_KEY"))
                 .build());
 ```
 
-## Using AgentHub APIs (non-passthrough)
+## Using AgentHub APIs
 
-AgentHub runs in non-pass-through mode and provides a unified interface for interacting with models and agentic capabilities. It is compatible with OpenAI's Responses API and the Open Responses Spec, enabling developers to build agents with the OpenAI SDK. Only the project OCID is required.
+AgentHub provides a unified interface for interacting with models and agentic capabilities. It is compatible with OpenAI's Responses API and the Open Responses Spec, enabling developers to build agents with the OpenAI SDK. Only the project OCID is required.
 
 ```java
 OciAuthConfig config = OciAuthConfig.builder()
@@ -126,9 +126,9 @@ OpenAIClient client = new OpenAIClientImpl(
                 .build());
 ```
 
-## Using Partner APIs (passthrough)
+## Using Partner APIs
 
-Partner endpoints run in pass-through mode and require the compartment OCID header.
+Partner endpoints require the compartment OCID header.
 
 ```java
 OciAuthConfig config = OciAuthConfig.builder()
@@ -142,7 +142,7 @@ OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 // The compartment ID is automatically injected as a header by the library
 OpenAIClient client = new OpenAIClientImpl(
         ClientOptions.builder()
-                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/v1")
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1")
                 .apiKey("not-used")
                 .httpClient(new OpenAIOkHttpAdapter(ociHttpClient, baseUrl))
                 .build());
@@ -160,15 +160,15 @@ OpenAIClient client = new OpenAIClientImpl(
 ## Running the Examples
 
 1. Update the constants in each example with your `COMPARTMENT_ID`, `PROJECT_OCID`, and set the correct `REGION`.
-2. Set the `OPENAI_API_KEY` environment variable when an example uses API key authentication.
+2. Set the `OCI_GENAI_API_KEY` environment variable when an example uses API key authentication.
 3. Install dependencies: `mvn install -DskipTests`.
 
 The [examples/](examples/) directory is organized as follows:
 
 | Directory | Description |
 |-----------|-------------|
-| [examples/agenthub/openai/](examples/agenthub/openai/) | AgentHub (non-passthrough) examples using the OpenAI Responses API |
-| [examples/partner/openai/](examples/partner/openai/) | Partner (passthrough) examples using OpenAI Chat Completions |
+| [examples/agenthub/openai/](examples/agenthub/openai/) | AgentHub examples using the OpenAI Responses API |
+| [examples/partner/openai/](examples/partner/openai/) | Partner examples using OpenAI Chat Completions |
 
 These examples are **not** compiled as part of the Maven build. Copy them into your own project.
 

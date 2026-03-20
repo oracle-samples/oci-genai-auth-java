@@ -13,7 +13,7 @@
  * <ol>
  *   <li>Create a Generative AI Project on OCI Console</li>
  *   <li>Create a Generative AI API Key on OCI Console</li>
- *   <li>Set OPENAI_API_KEY environment variable</li>
+ *   <li>Set OCI_GENAI_API_KEY environment variable</li>
  *   <li>Run this example</li>
  * </ol>
  */
@@ -32,7 +32,7 @@ public class QuickstartResponsesApiKey {
     public static void main(String[] args) {
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
-                .apiKey(System.getenv("OPENAI_API_KEY"))
+                .apiKey(System.getenv("OCI_GENAI_API_KEY"))
                 .build();
 
         Response response = client.responses().create(

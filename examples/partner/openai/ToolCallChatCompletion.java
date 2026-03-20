@@ -30,7 +30,7 @@ public class ToolCallChatCompletion {
     // ────────────────────────────────────────────────────────────────────
 
     private static final String BASE_URL =
-            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/v1";
+            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/20231130/actions/v1";
 
     /** Mock weather function. */
     private static String getCurrentWeather(String location) {
