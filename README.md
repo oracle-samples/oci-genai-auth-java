@@ -108,7 +108,7 @@ OpenAIClient client = new OpenAIClientImpl(
 
 ## Using AgentHub APIs
 
-AgentHub provides a unified interface for interacting with models and agentic capabilities. It is compatible with OpenAI's Responses API and the Open Responses Spec, enabling developers to build agents with the OpenAI SDK. Only the project OCID is required.
+AgentHub provides a unified interface for interacting with models and agentic capabilities. It is compatible with OpenAI's Responses API and the Open Responses Spec, enabling developers to build agents with the OpenAI SDK. Only the project OCID is required — no compartment ID needed.
 
 ```java
 OciAuthConfig config = OciAuthConfig.builder()
@@ -118,12 +118,12 @@ OciAuthConfig config = OciAuthConfig.builder()
 
 OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-OpenAIClient client = new OpenAIClientImpl(
-        ClientOptions.builder()
-                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
-                .apiKey("not-used")
-                .httpClient(new OpenAIOkHttpAdapter(ociHttpClient, baseUrl))
-                .build());
+OpenAIClient client = OpenAIOkHttpClient.builder()
+        .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
+        .okHttpClient(ociHttpClient)
+        .apiKey("not-used")
+        .addHeader("openai-project", "ocid1.generativeaiproject.oc1.us-chicago-1.aaaaaaaaexample")
+        .build();
 ```
 
 ## Using Partner APIs

@@ -30,9 +30,11 @@ public class QuickstartResponsesApiKey {
     // ────────────────────────────────────────────────────────────────────
 
     public static void main(String[] args) {
+        // AgentHub only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
                 .apiKey(System.getenv("OCI_GENAI_API_KEY"))
+                .addHeader("openai-project", PROJECT_OCID)
                 .build();
 
         Response response = client.responses().create(
