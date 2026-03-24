@@ -12,7 +12,7 @@
 
     <groupId>com.oracle.genai</groupId>
     <artifactId>oci-genai-auth-java-bom</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>OCI GenAI Auth :: BOM</name>
@@ -23,7 +23,7 @@
     </description>
 
     <properties>
-        <oci-genai-auth.version>0.1.0-SNAPSHOT</oci-genai-auth.version>
+        <oci-genai-auth.version>1.0.0</oci-genai-auth.version>
 
         <!-- OCI SDK -->
         <oci-sdk.version>3.72.1</oci-sdk.version>
