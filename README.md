@@ -10,7 +10,6 @@ The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the
 - [Using AgentHub APIs](#using-agenthub-apis)
 - [Using Partner APIs (passthrough)](#using-partner-apis-passthrough)
 - [Running the Examples](#running-the-examples)
-- [Building from Source](#building-from-source)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -144,25 +143,6 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
 ## Running the Examples
 
 Demo code and instructions on how to run them, for both AgentHub and Partner use cases can be found in the [examples](examples/) folder.
-
-## Building from Source
-
-```bash
-# Compile
-mvn clean compile
-
-# Run tests
-mvn test
-
-# Full verification
-mvn clean verify
-
-# Install to local Maven repository
-mvn install -DskipTests
-
-# Confirm no vendor SDK dependencies
-mvn dependency:tree -pl oci-genai-auth-java-core
-```
 
 ## Contributing
 
