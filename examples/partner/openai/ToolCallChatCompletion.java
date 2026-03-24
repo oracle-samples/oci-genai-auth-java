@@ -5,7 +5,7 @@
  */
 
 /**
- * Demonstrates tool calling with chat completions for the Partner (pass-through) endpoint.
+ * Demonstrates tool calling with chat completions for the Partner endpoint.
  */
 
 import com.openai.client.OpenAIClient;
