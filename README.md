@@ -9,7 +9,7 @@ The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the
 - [Using API Key Auth](#using-api-key-auth)
 - [Using AgentHub APIs](#using-agenthub-apis)
 - [Using Partner APIs (passthrough)](#using-partner-apis-passthrough)
-- [Running the Examples](#running-the-examples)
+- [Examples](#examples)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -87,7 +87,7 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
 
 OCI AgentHub provides a unified API for interacting with models and agentic capabilities.
 
-- It is compatible with OpenAI's Responses API and the [Open Responses Spec](https://www.openresponses.org/specification), enabling developers to build agents with OpenAI SDK and more.
+- It is compatible with OpenAI's Responses API and the [Open Responses Spec](https://www.openresponses.org/specification), enabling developers to build agents with OpenAI SDK, OpenAI Agents SDK, LangChain, LangGraph, AI SDK, CrewAI, and more.
 - It offers a uniform interface, auth, billing to access multiple model providers including OpenAI, Gemini, xAI, and GPT-OSS models hosted in OCI and your Dedicated AI Cluster.
 - It provides built-in agentic primitives such as agent loop, reasoning, short-term memory, long-term memory, web search, file search, image generation, code execution, and more.
 
@@ -140,9 +140,8 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
         .build();
 ```
 
-## Running the Examples
-
-Demo code and instructions on how to run them, for both AgentHub and Partner use cases can be found in the [examples](examples/) folder.
+## Examples
+Demo code and instructions on how to run them, for both agenthub and partner usecases can be found in [examples](examples/) folder.
 
 ## Contributing
 
