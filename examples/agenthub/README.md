@@ -1,35 +1,55 @@
 # AgentHub Examples
 
-AgentHub provides a unified interface for interacting with models and agentic capabilities.
-It is compatible with OpenAI's Responses API and the Open Responses Spec, enabling
-developers to build agents with the OpenAI SDK.
+This folder contains examples for OCI Generative AI AgentHub APIs using the OpenAI Java SDK.
 
 ## Prerequisites
 
-1. Create a **Generative AI Project** on OCI Console.
-2. Update `PROJECT_OCID` and `REGION` in each example file.
-3. Authenticate with OCI:
-   - **OCI IAM**: `oci session authenticate`
-   - **API Key**: Set `OCI_GENAI_API_KEY` environment variable
+1. Install dependencies:
 
-## Base URL
+   ```bash
+   mvn install -DskipTests
+   ```
 
-```
-https://inference.generativeai.<REGION>.oci.oraclecloud.com/openai/v1
-```
+2. Configure constants in each example file:
+   - `PROJECT_OCID`
+   - `REGION`
+
+3. (Optional) You can override project at runtime:
+
+   ```bash
+   export OCI_GENAI_PROJECT_ID=<your_project_ocid>
+   ```
+
+4. If running API-key based examples, set:
+
+   ```bash
+   export OCI_GENAI_API_KEY=<your_oci_genai_api_key>
+   ```
 
 ## Examples
 
+Quickstarts:
+
 | File | Description |
 |------|-------------|
-| `openai/QuickstartResponsesOciIam.java` | Quickstart with OCI IAM authentication |
-| `openai/QuickstartResponsesApiKey.java` | Quickstart with API key authentication |
-| `openai/responses/CreateResponse.java` | Create a response |
-| `openai/responses/StreamingTextDelta.java` | Stream response text deltas |
-| `openai/tools/WebSearch.java` | Web search tool |
-| `openai/tools/FunctionCalling.java` | Function calling tool |
+| `QuickstartResponsesOciIam.java` | Quickstart with OCI IAM authentication |
+| `QuickstartResponsesApiKey.java` | Quickstart with API key authentication |
 
-## Running
+Responses API examples:
 
-These are standalone Java files. Copy them into your project with the required dependencies
-(`oci-genai-auth-java-core` and `openai-java`), then compile and run.
+| File | Description |
+|------|-------------|
+| `responses/CreateResponse.java` | Create a response |
+| `responses/StreamingTextDelta.java` | Stream response text deltas |
+
+Tools examples:
+
+| File | Description |
+|------|-------------|
+| `tools/FunctionCalling.java` | Function calling tool |
+| `tools/WebSearch.java` | Web search tool |
+
+## Notes
+
+- Most examples use IAM signing through `oci-genai-auth-java`.
+- AgentHub examples use OpenAI-compatible `/openai/v1` endpoints and require a project OCID.
