@@ -1,0 +1,59 @@
+/*
+ * Copyright (c) 2026 Oracle and/or its affiliates.
+ * Licensed under the Universal Permissive License v 1.0 as shown at
+ * https://oss.oracle.com/licenses/upl/
+ */
+
+/**
+ * Demonstrates the web_search tool in AgentHub.
+ */
+
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.Tool;
+import com.openai.models.responses.WebSearchTool;
+
+import com.oracle.genai.auth.OciAuthConfig;
+import com.oracle.genai.auth.OciOkHttpClientFactory;
+
+import okhttp3.OkHttpClient;
+
+public class WebSearch {
+
+    // ── Configuration ──────────────────────────────────────────────────
+    private static final String REGION       = "us-chicago-1";
+    private static final String PROJECT_OCID = "<<ENTER_PROJECT_ID>>";
+    private static final String MODEL        = "openai.gpt-4.1";
+    // ────────────────────────────────────────────────────────────────────
+
+    private static final String BASE_URL =
+            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/openai/v1";
+
+    public static void main(String[] args) {
+        OciAuthConfig config = OciAuthConfig.builder()
+                .authType("security_token")
+                .profile("DEFAULT")
+                .build();
+
+        OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
+
+        // AgentHub only needs project OCID — no compartment ID required
+        OpenAIClient client = OpenAIOkHttpClient.builder()
+                .baseUrl(BASE_URL)
+                .okHttpClient(ociHttpClient)
+                .apiKey("not-used")
+                .addHeader("openai-project", PROJECT_OCID)
+                .build();
+
+        Response response = client.responses().create(
+                ResponseCreateParams.builder()
+                        .model(MODEL)
+                        .addTool(Tool.ofWebSearch(WebSearchTool.builder().build()))
+                        .input("What was a positive news story on 2025-11-14?")
+                        .build());
+
+        System.out.println(response.outputText());
+    }
+}

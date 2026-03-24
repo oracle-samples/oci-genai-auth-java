@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Oracle and/or its affiliates.
+  Licensed under the Universal Permissive License v 1.0 as shown at
+  https://oss.oracle.com/licenses/upl/
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.oracle.genai</groupId>
+    <artifactId>oci-genai-auth-java-bom</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>OCI GenAI Auth :: BOM</name>
+    <description>
+        Bill of Materials (BOM) for the OCI GenAI Auth library.
+        Import this POM to pin the core module version and key transitive
+        dependency versions, preventing diamond dependency conflicts.
+    </description>
+
+    <properties>
+        <oci-genai-auth.version>0.1.0-SNAPSHOT</oci-genai-auth.version>
+
+        <!-- OCI SDK -->
+        <oci-sdk.version>3.72.1</oci-sdk.version>
+
+        <!-- Shared transitive dependencies -->
+        <okhttp.version>5.3.2</okhttp.version>
+        <slf4j.version>2.0.17</slf4j.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- ==================== First-party module ==================== -->
+            <dependency>
+                <groupId>com.oracle.genai</groupId>
+                <artifactId>oci-genai-auth-java-core</artifactId>
+                <version>${oci-genai-auth.version}</version>
+            </dependency>
+
+            <!-- ==================== OCI SDK ==================== -->
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-common</artifactId>
+                <version>${oci-sdk.version}</version>
+            </dependency>
+
+            <!-- ==================== Pinned transitive dependencies ==================== -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

@@ -1,0 +1,36 @@
+# Mac
+.DS_Store
+
+# Build output
+target/
+
+# IDE files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+*.swp
+*.swo
+*.orig
+
+# OS files
+Thumbs.db
+
+# Maven
+dependency-reduced-pom.xml
+
+# Logs
+*.log
+
+# Environments
+.env
+.envrc
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Scratch files
+scratch/

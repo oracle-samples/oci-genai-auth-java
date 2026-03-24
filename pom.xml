@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Oracle and/or its affiliates.
+  Licensed under the Universal Permissive License v 1.0 as shown at
+  https://oss.oracle.com/licenses/upl/
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.oracle.genai</groupId>
+    <artifactId>oci-genai-auth-java-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>OCI GenAI Auth :: Parent</name>
+    <description>
+        OCI request signing and authentication utilities for calling OCI-hosted
+        AI compatibility endpoints using any HTTP client based on OkHttp.
+    </description>
+
+    <licenses>
+        <license>
+            <name>Universal Permissive License v 1.0</name>
+            <url>https://oss.oracle.com/licenses/upl/</url>
+        </license>
+    </licenses>
+
+    <modules>
+        <module>oci-genai-auth-java-bom</module>
+        <module>oci-genai-auth-java-core</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <!-- First-party versions -->
+        <oci-genai-auth.version>0.1.0-SNAPSHOT</oci-genai-auth.version>
+
+        <!-- OCI SDK -->
+        <oci-sdk.version>3.72.1</oci-sdk.version>
+
+        <!-- Shared dependencies -->
+        <okhttp.version>5.3.2</okhttp.version>
+        <slf4j.version>2.0.17</slf4j.version>
+
+        <!-- Test dependencies -->
+        <junit-jupiter.version>5.11.4</junit-jupiter.version>
+        <mockito.version>5.14.2</mockito.version>
+
+        <!-- Plugin versions -->
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Import the BOM for all first-party + key transitive versions -->
+            <dependency>
+                <groupId>com.oracle.genai</groupId>
+                <artifactId>oci-genai-auth-java-bom</artifactId>
+                <version>${oci-genai-auth.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Common test dependencies for all modules -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>${okhttp.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
