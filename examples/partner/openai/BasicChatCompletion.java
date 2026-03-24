@@ -5,7 +5,7 @@
  */
 
 /**
- * Demonstrates a basic chat completion request for the Partner (pass-through) endpoint.
+ * Demonstrates a basic chat completion request for the Partner endpoint.
  *
  * <p>This file is a standalone example — it is NOT compiled as part of the Maven build.
  * Copy it into your own project and add the required dependencies.

@@ -5,7 +5,7 @@
  */
 
 /**
- * Demonstrates streaming chat completion responses for the Partner (pass-through) endpoint.
+ * Demonstrates streaming chat completion responses for the Partner endpoint.
  */
 
 import com.openai.client.OpenAIClient;
