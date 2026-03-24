@@ -28,9 +28,5 @@ dependency-reduced-pom.xml
 .env
 .envrc
 
-# AI tooling config
-CLAUDE.md
-.claude/
-
 # Scratch files
 scratch/
