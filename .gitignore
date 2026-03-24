@@ -28,7 +28,7 @@ dependency-reduced-pom.xml
 .env
 .envrc
 
-# Claude Code
+# AI tooling config
 CLAUDE.md
 .claude/
 
