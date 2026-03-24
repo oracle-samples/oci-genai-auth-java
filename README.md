@@ -131,8 +131,6 @@ OciAuthConfig config = OciAuthConfig.builder()
         .build();
 
 OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
-
-// The compartment ID is automatically injected as a header by the library
 OpenAIClient client = OpenAIOkHttpClient.builder()
         .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1")
         .okHttpClient(ociHttpClient)
