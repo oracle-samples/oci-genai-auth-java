@@ -26,7 +26,7 @@ Requires **Java 17+** and **Maven 3.8+**.
         <dependency>
             <groupId>com.oracle.genai</groupId>
             <artifactId>oci-genai-auth-java-bom</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -131,6 +131,7 @@ OciAuthConfig config = OciAuthConfig.builder()
         .build();
 
 OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
+
 OpenAIClient client = OpenAIOkHttpClient.builder()
         .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1")
         .okHttpClient(ociHttpClient)
