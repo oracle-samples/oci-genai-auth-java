@@ -7,9 +7,7 @@ This guide helps existing `oci-genai-openai` users migrate to `oci-genai-auth-ja
 - Replace dependency `oci-genai-openai` with `oci-genai-auth-java-core`.
 - Continue using the `openai-java` SDK client.
 - Use `OciOkHttpClientFactory` to build a signed OkHttpClient.
-- Choose endpoint/config based on API mode:
-  - OCI Enterprise AI Agents: `https://inference.generativeai.<region>.oci.oraclecloud.com/openai/v1` + `openai-project` header
-  - Partner : `https://inference.generativeai.<region>.oci.oraclecloud.com/20231130/actions/v1` + `compartmentId`
+- Use the OCI Enterprise AI Agents endpoint: `https://inference.generativeai.<region>.oci.oraclecloud.com/openai/v1` + `openai-project` header
 
 ## 1) Dependency Changes
 
@@ -78,31 +76,8 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
         .build();
 ```
 
-### Partner APIs
-
-Use `/20231130/actions/v1` and include compartment ID:
-
-```java
-OciAuthConfig config = OciAuthConfig.builder()
-        .authType("security_token")
-        .profile("DEFAULT")
-        .compartmentId("<ocid1.compartment...>")
-        .build();
-
-OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
-
-OpenAIClient client = OpenAIOkHttpClient.builder()
-        .baseUrl("https://inference.generativeai.<region>.oci.oraclecloud.com/20231130/actions/v1")
-        .okHttpClient(ociHttpClient)
-        .apiKey("not-used")
-        .build();
-```
-
 ## 4) Endpoint and required parameters
 
 - OCI Enterprise AI Agents:
   - `baseUrl`: `https://inference.generativeai.<region>.oci.oraclecloud.com/openai/v1`
   - required: `openai-project` header with project OCID
-- Partner:
-  - `baseUrl`: `https://inference.generativeai.<region>.oci.oraclecloud.com/20231130/actions/v1`
-  - required: `compartmentId` in `OciAuthConfig`
