@@ -5,32 +5,27 @@
  */
 
 /**
- * Quickstart using OCI IAM authentication with the Responses API on AgentHub.
- *
- * <p>Steps:
- * <ol>
- *   <li>Create a Generative AI Project on OCI Console</li>
- *   <li>Add oci-genai-auth-java-core dependency</li>
- *   <li>Run this example</li>
- * </ol>
+ * Demonstrates the web_search tool in OCI Enterprise AI Agents.
  */
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.Tool;
+import com.openai.models.responses.WebSearchTool;
 
 import com.oracle.genai.auth.OciAuthConfig;
 import com.oracle.genai.auth.OciOkHttpClientFactory;
 
 import okhttp3.OkHttpClient;
 
-public class QuickstartResponsesOciIam {
+public class WebSearch {
 
     // ── Configuration ──────────────────────────────────────────────────
     private static final String REGION       = "us-chicago-1";
     private static final String PROJECT_OCID = "<<ENTER_PROJECT_ID>>";
-    private static final String MODEL        = "xai.grok-3";
+    private static final String MODEL        = "openai.gpt-4.1";
     // ────────────────────────────────────────────────────────────────────
 
     private static final String BASE_URL =
@@ -44,7 +39,7 @@ public class QuickstartResponsesOciIam {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // AgentHub only needs project OCID — no compartment ID required
+        // OCI Enterprise AI Agents only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl(BASE_URL)
                 .okHttpClient(ociHttpClient)
@@ -55,7 +50,8 @@ public class QuickstartResponsesOciIam {
         Response response = client.responses().create(
                 ResponseCreateParams.builder()
                         .model(MODEL)
-                        .input("What is 2x2?")
+                        .addTool(Tool.ofWebSearch(WebSearchTool.builder().build()))
+                        .input("What was a positive news story on 2025-11-14?")
                         .build());
 
         System.out.println(response.outputText());

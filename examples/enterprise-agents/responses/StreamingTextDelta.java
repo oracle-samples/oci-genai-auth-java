@@ -5,27 +5,24 @@
  */
 
 /**
- * Demonstrates the web_search tool in AgentHub.
+ * Demonstrates streaming Responses API output and handling text deltas.
  */
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
-import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.Tool;
-import com.openai.models.responses.WebSearchTool;
 
 import com.oracle.genai.auth.OciAuthConfig;
 import com.oracle.genai.auth.OciOkHttpClientFactory;
 
 import okhttp3.OkHttpClient;
 
-public class WebSearch {
+public class StreamingTextDelta {
 
     // ── Configuration ──────────────────────────────────────────────────
     private static final String REGION       = "us-chicago-1";
     private static final String PROJECT_OCID = "<<ENTER_PROJECT_ID>>";
-    private static final String MODEL        = "openai.gpt-4.1";
+    private static final String MODEL        = "xai.grok-3";
     // ────────────────────────────────────────────────────────────────────
 
     private static final String BASE_URL =
@@ -39,7 +36,7 @@ public class WebSearch {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // AgentHub only needs project OCID — no compartment ID required
+        // OCI Enterprise AI Agents only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl(BASE_URL)
                 .okHttpClient(ociHttpClient)
@@ -47,13 +44,17 @@ public class WebSearch {
                 .addHeader("openai-project", PROJECT_OCID)
                 .build();
 
-        Response response = client.responses().create(
+        client.responses().createStreaming(
                 ResponseCreateParams.builder()
                         .model(MODEL)
-                        .addTool(Tool.ofWebSearch(WebSearchTool.builder().build()))
-                        .input("What was a positive news story on 2025-11-14?")
-                        .build());
+                        .input("What are the shapes of OCI GPUs?")
+                        .build())
+                .stream()
+                .forEach(event -> {
+                    event.asResponseOutputTextDeltaEvent().ifPresent(delta ->
+                            System.out.print(delta.delta()));
+                });
 
-        System.out.println(response.outputText());
+        System.out.println();
     }
 }

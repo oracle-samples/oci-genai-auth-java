@@ -5,17 +5,7 @@
  */
 
 /**
- * Quickstart using Generative AI API Key authentication with the Responses API.
- *
- * <p>No oci-genai-auth package needed for API Key auth — just the official OpenAI SDK.
- *
- * <p>Steps:
- * <ol>
- *   <li>Create a Generative AI Project on OCI Console</li>
- *   <li>Create a Generative AI API Key on OCI Console</li>
- *   <li>Set OCI_GENAI_API_KEY environment variable</li>
- *   <li>Run this example</li>
- * </ol>
+ * Demonstrates creating a response with the Responses API on OCI Enterprise AI Agents.
  */
 
 import com.openai.client.OpenAIClient;
@@ -23,23 +13,41 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 
-public class QuickstartResponsesApiKey {
+import com.oracle.genai.auth.OciAuthConfig;
+import com.oracle.genai.auth.OciOkHttpClientFactory;
+
+import okhttp3.OkHttpClient;
+
+public class CreateResponse {
 
     // ── Configuration ──────────────────────────────────────────────────
+    private static final String REGION       = "us-chicago-1";
     private static final String PROJECT_OCID = "<<ENTER_PROJECT_ID>>";
+    private static final String MODEL        = "xai.grok-3";
     // ────────────────────────────────────────────────────────────────────
 
+    private static final String BASE_URL =
+            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/openai/v1";
+
     public static void main(String[] args) {
-        // AgentHub only needs project OCID — no compartment ID required
+        OciAuthConfig config = OciAuthConfig.builder()
+                .authType("security_token")
+                .profile("DEFAULT")
+                .build();
+
+        OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
+
+        // OCI Enterprise AI Agents only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
-                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
-                .apiKey(System.getenv("OCI_GENAI_API_KEY"))
+                .baseUrl(BASE_URL)
+                .okHttpClient(ociHttpClient)
+                .apiKey("not-used")
                 .addHeader("openai-project", PROJECT_OCID)
                 .build();
 
         Response response = client.responses().create(
                 ResponseCreateParams.builder()
-                        .model("xai.grok-3")
+                        .model(MODEL)
                         .input("What is 2x2?")
                         .build());
 

@@ -1,6 +1,6 @@
-# AgentHub Examples
+# OCI Enterprise AI Agents Examples
 
-This folder contains examples for OCI Generative AI AgentHub APIs using the OpenAI Java SDK.
+This folder contains examples for OCI Enterprise AI Agents APIs using the OpenAI Java SDK.
 
 ## Prerequisites
 
@@ -52,4 +52,4 @@ Tools examples:
 ## Notes
 
 - Most examples use IAM signing through `oci-genai-auth-java`.
-- AgentHub examples use OpenAI-compatible `/openai/v1` endpoints and require a project OCID.
+- OCI Enterprise AI Agents examples use OpenAI-compatible `/openai/v1` endpoints and require a project OCID.

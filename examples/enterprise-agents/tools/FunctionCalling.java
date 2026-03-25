@@ -5,7 +5,7 @@
  */
 
 /**
- * Demonstrates function calling tools in AgentHub using the Responses API.
+ * Demonstrates function calling tools in OCI Enterprise AI Agents using the Responses API.
  */
 
 import com.openai.client.OpenAIClient;
@@ -46,7 +46,7 @@ public class FunctionCalling {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // AgentHub only needs project OCID — no compartment ID required
+        // OCI Enterprise AI Agents only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl(BASE_URL)
                 .okHttpClient(ociHttpClient)

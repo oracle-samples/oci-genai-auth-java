@@ -7,7 +7,7 @@ The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the
 - [Installation](#installation)
 - [Using OCI IAM Auth](#using-oci-iam-auth)
 - [Using API Key Auth](#using-api-key-auth)
-- [Using AgentHub APIs](#using-agenthub-apis)
+- [Using OCI Enterprise AI Agents APIs](#using-oci-enterprise-ai-agents-apis)
 - [Using Partner APIs (passthrough)](#using-partner-apis-passthrough)
 - [Examples](#examples)
 - [Contributing](#contributing)
@@ -83,17 +83,17 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
         .build();
 ```
 
-## Using AgentHub APIs
+## Using OCI Enterprise AI Agents APIs
 
-OCI AgentHub provides a unified API for interacting with models and agentic capabilities.
+OCI Enterprise AI Agents provides a unified API for interacting with models and agentic capabilities.
 
 - It is compatible with OpenAI's Responses API and the [Open Responses Spec](https://www.openresponses.org/specification), enabling developers to build agents with OpenAI SDK, OpenAI Agents SDK, LangChain, LangGraph, AI SDK, CrewAI, and more.
 - It offers a uniform interface, auth, billing to access multiple model providers including OpenAI, Gemini, xAI, and GPT-OSS models hosted in OCI and your Dedicated AI Cluster.
 - It provides built-in agentic primitives such as agent loop, reasoning, short-term memory, long-term memory, web search, file search, image generation, code execution, and more.
 
-In addition to the compatible endpoint to Responses API, AgentHub also offers compatible endpoints to Files API, Vector Stores API, and Containers API.
+In addition to the compatible endpoint to Responses API, OCI Enterprise AI Agents also offers compatible endpoints to Files API, Vector Stores API, and Containers API.
 
-Explore [examples](examples/agenthub) to get started.
+Explore [examples](examples/enterprise-agents) to get started.
 
 Note: OpenAI commercial models and image generation are only available to Oracle internal teams at this moment.
 
@@ -121,7 +121,7 @@ You can leverage Partner API when you want to use OpenAI's API and GPT models, b
 
 Note: Currently Partner API is only available to Oracle internal teams. Only features that meet partner's Zero Data Retention are available through Partner API.
 
-If you want multi-provider model access and features unavailable under partner's Zero Data Retention (such as File Search), use the AgentHub APIs above.
+If you want multi-provider model access and features unavailable under partner's Zero Data Retention (such as File Search), use the OCI Enterprise AI Agents APIs above.
 
 ```java
 OciAuthConfig config = OciAuthConfig.builder()
@@ -140,7 +140,7 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
 ```
 
 ## Examples
-Demo code and instructions on how to run them, for both agenthub and partner usecases can be found in [examples](examples/) folder.
+Demo code and instructions on how to run them, for both OCI Enterprise AI Agents and partner usecases can be found in [examples](examples/) folder.
 
 ## Contributing
 

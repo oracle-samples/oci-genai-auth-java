@@ -5,11 +5,19 @@
  */
 
 /**
- * Demonstrates streaming Responses API output and handling text deltas.
+ * Quickstart using OCI IAM authentication with the Responses API on OCI Enterprise AI Agents.
+ *
+ * <p>Steps:
+ * <ol>
+ *   <li>Create a Generative AI Project on OCI Console</li>
+ *   <li>Add oci-genai-auth-java-core dependency</li>
+ *   <li>Run this example</li>
+ * </ol>
  */
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 
 import com.oracle.genai.auth.OciAuthConfig;
@@ -17,7 +25,7 @@ import com.oracle.genai.auth.OciOkHttpClientFactory;
 
 import okhttp3.OkHttpClient;
 
-public class StreamingTextDelta {
+public class QuickstartResponsesOciIam {
 
     // ── Configuration ──────────────────────────────────────────────────
     private static final String REGION       = "us-chicago-1";
@@ -36,7 +44,7 @@ public class StreamingTextDelta {
 
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-        // AgentHub only needs project OCID — no compartment ID required
+        // OCI Enterprise AI Agents only needs project OCID — no compartment ID required
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .baseUrl(BASE_URL)
                 .okHttpClient(ociHttpClient)
@@ -44,17 +52,12 @@ public class StreamingTextDelta {
                 .addHeader("openai-project", PROJECT_OCID)
                 .build();
 
-        client.responses().createStreaming(
+        Response response = client.responses().create(
                 ResponseCreateParams.builder()
                         .model(MODEL)
-                        .input("What are the shapes of OCI GPUs?")
-                        .build())
-                .stream()
-                .forEach(event -> {
-                    event.asResponseOutputTextDeltaEvent().ifPresent(delta ->
-                            System.out.print(delta.delta()));
-                });
+                        .input("What is 2x2?")
+                        .build());
 
-        System.out.println();
+        System.out.println(response.outputText());
     }
 }
