@@ -93,7 +93,7 @@ OCI Enterprise AI Agents provides a unified API for interacting with models and 
 
 In addition to the compatible endpoint to Responses API, OCI Enterprise AI Agents also offers compatible endpoints to Files API, Vector Stores API, and Containers API.
 
-Explore [examples](examples/enterprise-agents) to get started.
+Explore [examples](examples/oci-enterprise-ai-agents) to get started.
 
 Note: OpenAI commercial models and image generation are only available to Oracle internal teams at this moment.
 
