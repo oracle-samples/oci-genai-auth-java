@@ -8,7 +8,6 @@ The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the
 - [Using OCI IAM Auth](#using-oci-iam-auth)
 - [Using API Key Auth](#using-api-key-auth)
 - [Using OCI Enterprise AI Agents APIs](#using-oci-enterprise-ai-agents-apis)
-- [Using Partner APIs (passthrough)](#using-partner-apis-passthrough)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Security](#security)
@@ -113,34 +112,8 @@ OpenAIClient client = OpenAIOkHttpClient.builder()
         .build();
 ```
 
-## Using Partner APIs (passthrough)
-
-OCI also offers Partner API which passes through your calls to partners such as OpenAI. We will support more partners in the future.
-
-You can leverage Partner API when you want to use OpenAI's API and GPT models, but with OCI auth and billing.
-
-Note: Currently Partner API is only available to Oracle internal teams. Only features that meet partner's Zero Data Retention are available through Partner API.
-
-If you want multi-provider model access and features unavailable under partner's Zero Data Retention (such as File Search), use the OCI Enterprise AI Agents APIs above.
-
-```java
-OciAuthConfig config = OciAuthConfig.builder()
-        .authType("security_token")
-        .profile("DEFAULT")
-        .compartmentId("ocid1.compartment.oc1..aaaaaaaaexample")
-        .build();
-
-OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
-
-OpenAIClient client = OpenAIOkHttpClient.builder()
-        .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1")
-        .okHttpClient(ociHttpClient)
-        .apiKey("not-used")
-        .build();
-```
-
 ## Examples
-Demo code and instructions on how to run them, for both OCI Enterprise AI Agents and partner usecases can be found in [examples](examples/) folder.
+Demo code and instructions on how to run them can be found in [examples](examples/) folder.
 
 ## Contributing
 
