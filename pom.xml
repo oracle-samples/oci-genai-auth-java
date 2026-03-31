@@ -12,7 +12,7 @@
 
     <groupId>com.oracle.genai</groupId>
     <artifactId>oci-genai-auth-java-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.4</version>
     <packaging>pom</packaging>
 
     <name>OCI GenAI Auth :: Parent</name>
@@ -39,7 +39,7 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <!-- First-party versions -->
-        <oci-genai-auth.version>1.0.0</oci-genai-auth.version>
+        <oci-genai-auth.version>1.0.4</oci-genai-auth.version>
 
         <!-- OCI SDK -->
         <oci-sdk.version>3.72.1</oci-sdk.version>
@@ -56,17 +56,31 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Import the BOM for all first-party + key transitive versions -->
+            <!-- Import the BOM for all first-party  key transitive versions -->
             <dependency>
-                <groupId>com.oracle.genai</groupId>
-                <artifactId>oci-genai-auth-java-bom</artifactId>
-                <version>${oci-genai-auth.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-common</artifactId>
+                <version>${oci-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -115,6 +129,11 @@
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven-jar-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -125,6 +144,31 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-legal-files-to-core-target</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/oci-genai-auth-java-core/target/classes</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>LICENSE.txt</include>
+                                        <include>THIRD_PARTY_LICENSES.txt</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

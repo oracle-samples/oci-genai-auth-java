@@ -23,7 +23,7 @@ Replace the old dependency with the new one in your `pom.xml`:
         <dependency>
             <groupId>com.oracle.genai</groupId>
             <artifactId>oci-genai-auth-java-bom</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.4</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
