@@ -16,12 +16,14 @@
  */
 
 import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.client.OpenAIClientImpl;
+import com.openai.core.ClientOptions;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 
 import com.oracle.genai.auth.OciAuthConfig;
 import com.oracle.genai.auth.OciOkHttpClientFactory;
+import com.oracle.genai.auth.OciOpenAIHttpClient;
 
 import okhttp3.OkHttpClient;
 
@@ -45,12 +47,12 @@ public class QuickstartResponsesOciIam {
         OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
         // OCI Enterprise AI Agents only needs project OCID — no compartment ID required
-        OpenAIClient client = OpenAIOkHttpClient.builder()
+        OpenAIClient client = new OpenAIClientImpl(ClientOptions.builder()
+                .httpClient(OciOpenAIHttpClient.of(ociHttpClient, BASE_URL))
                 .baseUrl(BASE_URL)
-                .okHttpClient(ociHttpClient)
                 .apiKey("not-used")
-                .addHeader("openai-project", PROJECT_OCID)
-                .build();
+                .putHeader("openai-project", PROJECT_OCID)
+                .build());
 
         Response response = client.responses().create(
                 ResponseCreateParams.builder()

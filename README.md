@@ -47,8 +47,11 @@ Use OCI IAM auth when you want to sign requests with your OCI profile (session/u
 ```java
 import com.oracle.genai.auth.OciAuthConfig;
 import com.oracle.genai.auth.OciOkHttpClientFactory;
+import com.oracle.genai.auth.OciOpenAIHttpClient;
 import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.client.OpenAIClientImpl;
+import com.openai.core.ClientOptions;
+import okhttp3.OkHttpClient;
 
 OciAuthConfig config = OciAuthConfig.builder()
         .authType("security_token")
@@ -57,11 +60,13 @@ OciAuthConfig config = OciAuthConfig.builder()
 
 OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-OpenAIClient client = OpenAIOkHttpClient.builder()
-        .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
-        .okHttpClient(ociHttpClient)
+String baseUrl = "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1";
+
+OpenAIClient client = new OpenAIClientImpl(ClientOptions.builder()
+        .httpClient(OciOpenAIHttpClient.of(ociHttpClient, baseUrl))
+        .baseUrl(baseUrl)
         .apiKey("not-used")
-        .build();
+        .build());
 ```
 
 ## Using API Key Auth
@@ -97,6 +102,14 @@ Explore [examples](examples/enterprise_ai_agents) to get started.
 Note: OpenAI commercial models and image generation are only available to Oracle internal teams at this moment.
 
 ```java
+import com.oracle.genai.auth.OciAuthConfig;
+import com.oracle.genai.auth.OciOkHttpClientFactory;
+import com.oracle.genai.auth.OciOpenAIHttpClient;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientImpl;
+import com.openai.core.ClientOptions;
+import okhttp3.OkHttpClient;
+
 OciAuthConfig config = OciAuthConfig.builder()
         .authType("security_token")
         .profile("DEFAULT")
@@ -104,12 +117,14 @@ OciAuthConfig config = OciAuthConfig.builder()
 
 OkHttpClient ociHttpClient = OciOkHttpClientFactory.build(config);
 
-OpenAIClient client = OpenAIOkHttpClient.builder()
-        .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1")
-        .okHttpClient(ociHttpClient)
+String baseUrl = "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/openai/v1";
+
+OpenAIClient client = new OpenAIClientImpl(ClientOptions.builder()
+        .httpClient(OciOpenAIHttpClient.of(ociHttpClient, baseUrl))
+        .baseUrl(baseUrl)
         .apiKey("not-used")
-        .addHeader("openai-project", "ocid1.generativeaiproject.oc1.us-chicago-1.aaaaaaaaexample")
-        .build();
+        .putHeader("openai-project", "ocid1.generativeaiproject.oc1.us-chicago-1.aaaaaaaaexample")
+        .build());
 ```
 
 ## Examples
