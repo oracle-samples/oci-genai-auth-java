@@ -51,7 +51,15 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <!-- OpenAI SDK — integration test only -->
+        <!-- OpenAI SDK core — optional; required only when using OciOpenAIHttpClient -->
+        <dependency>
+            <groupId>com.openai</groupId>
+            <artifactId>openai-java-core</artifactId>
+            <version>4.26.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- OpenAI SDK — integration tests only -->
         <dependency>
             <groupId>com.openai</groupId>
             <artifactId>openai-java</artifactId>
