@@ -12,7 +12,7 @@
 
     <groupId>com.oracle.genai</groupId>
     <artifactId>oci-genai-auth-java-parent</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.8</version>
     <packaging>pom</packaging>
 
     <name>OCI GenAI Auth :: Parent</name>
@@ -39,7 +39,7 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <!-- First-party versions -->
-        <oci-genai-auth.version>1.0.5</oci-genai-auth.version>
+        <oci-genai-auth.version>1.0.8</oci-genai-auth.version>
 
         <!-- OCI SDK -->
         <oci-sdk.version>3.72.1</oci-sdk.version>

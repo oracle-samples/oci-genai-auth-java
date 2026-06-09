@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.oracle.genai</groupId>
         <artifactId>oci-genai-auth-java-parent</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.8</version>
     </parent>
 
     <artifactId>oci-genai-auth-java-core</artifactId>
