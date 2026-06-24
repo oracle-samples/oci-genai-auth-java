@@ -7,6 +7,7 @@ package com.oracle.genai.auth;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -109,6 +110,38 @@ class OciSigningInterceptorTest {
         assertNotNull(request.getHeader("x-content-sha256"), "x-content-sha256 should be present for POST");
         assertEquals("{\"message\":\"hello\"}", request.getBody().readUtf8(),
                 "Body should be preserved after signing");
+    }
+
+    @Test
+    void signsMultipartBodyWithWireContentHeaders() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        RequestBody audio = RequestBody.create(
+                new byte[] {0x52, 0x49, 0x46, 0x46}, MediaType.parse("audio/wav"));
+        RequestBody body = new MultipartBody.Builder("test-boundary")
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("model", "vllm-model")
+                .addFormDataPart("file", "sample.wav", audio)
+                .build();
+
+        client.newCall(new Request.Builder()
+                .url(server.url("/audio/transcriptions"))
+                .post(body)
+                .build()).execute().close();
+
+        RecordedRequest request = server.takeRequest();
+        String authorization = request.getHeader("Authorization");
+        assertNotNull(authorization, "Authorization should be present");
+        assertTrue(authorization.contains("content-length"),
+                "content-length should be part of the signed header list");
+        assertTrue(authorization.contains("content-type"),
+                "content-type should be part of the signed header list");
+        assertTrue(authorization.contains("x-content-sha256"),
+                "x-content-sha256 should be part of the signed header list");
+        assertEquals("multipart/form-data; boundary=test-boundary", request.getHeader("Content-Type"));
+        assertEquals(String.valueOf(request.getBodySize()), request.getHeader("Content-Length"));
+        assertTrue(request.getBody().readUtf8().contains("sample.wav"),
+                "Multipart body should be preserved after signing");
     }
 
     @Test

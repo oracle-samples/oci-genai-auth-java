@@ -64,27 +64,32 @@ public class OciSigningInterceptor implements Interceptor {
         URI uri = originalRequest.url().uri();
         String method = originalRequest.method();
 
-        // Build the headers map that OCI signing expects.
-        // Normalize content-type to strip "; charset=utf-8" that OkHttp appends
-        // to string bodies — some OCI endpoints strip it before signature verification,
-        // causing SIGNATURE_NOT_VALID errors.
-        Map<String, List<String>> existingHeaders = new HashMap<>();
-        for (String name : originalRequest.headers().names()) {
-            List<String> values = originalRequest.headers(name);
-            if ("content-type".equalsIgnoreCase(name)) {
-                values = values.stream()
-                        .map(v -> v.replaceAll(";\\s*charset=utf-8", "").trim())
-                        .toList();
-            }
-            existingHeaders.put(name, values);
-        }
-
         // Read the request body for signing (OCI signs the body digest)
         byte[] bodyBytes = null;
         if (originalRequest.body() != null) {
             Buffer buffer = new Buffer();
             originalRequest.body().writeTo(buffer);
             bodyBytes = buffer.readByteArray();
+        }
+
+        // Build the headers map that OCI signing expects. OkHttp adds body-derived
+        // Content-Type and Content-Length later, so provide the exact values here.
+        Map<String, List<String>> existingHeaders = new HashMap<>();
+        for (String name : originalRequest.headers().names()) {
+            List<String> values = originalRequest.headers(name);
+            if ("content-type".equalsIgnoreCase(name)) {
+                values = values.stream()
+                        .map(OciSigningInterceptor::normalizeContentType)
+                        .toList();
+            }
+            existingHeaders.put(name, values);
+        }
+        if (bodyBytes != null) {
+            if (!containsHeader(existingHeaders, "content-type") && originalRequest.body().contentType() != null) {
+                existingHeaders.put("content-type",
+                        List.of(normalizeContentType(originalRequest.body().contentType().toString())));
+            }
+            existingHeaders.put("content-length", List.of(String.valueOf(bodyBytes.length)));
         }
 
         // Compute OCI signature headers
@@ -121,6 +126,14 @@ public class OciSigningInterceptor implements Interceptor {
         LOG.debug("OCI-signed request: {} {}", method, uri);
 
         return chain.proceed(signedRequest);
+    }
+
+    private static boolean containsHeader(Map<String, List<String>> headers, String headerName) {
+        return headers.keySet().stream().anyMatch(name -> name.equalsIgnoreCase(headerName));
+    }
+
+    private static String normalizeContentType(String contentType) {
+        return contentType.replaceAll(";\\s*charset=utf-8", "").trim();
     }
 
     /**
