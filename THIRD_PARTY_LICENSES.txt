@@ -34,6 +34,13 @@ dependencies (JUnit, Mockito, MockWebServer, etc.) are not redistributed.
    License:  MIT License
    URL:      https://www.slf4j.org
 
+5. OpenAI Java Core
+   Group:    com.openai
+   Artifact: openai-java-core
+   Version:  4.39.1
+   License:  Apache License 2.0
+   URL:      https://github.com/openai/openai-java
+
 ================================================================================
 
 APACHE LICENSE 2.0

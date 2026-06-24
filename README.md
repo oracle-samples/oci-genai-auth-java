@@ -25,7 +25,7 @@ Requires **Java 17+** and **Maven 3.8+**.
         <dependency>
             <groupId>com.oracle.genai</groupId>
             <artifactId>oci-genai-auth-java-bom</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.9</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
