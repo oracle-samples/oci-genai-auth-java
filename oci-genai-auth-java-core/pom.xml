@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.oracle.genai</groupId>
         <artifactId>oci-genai-auth-java-parent</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.9</version>
     </parent>
 
     <artifactId>oci-genai-auth-java-core</artifactId>
@@ -55,7 +55,7 @@
         <dependency>
             <groupId>com.openai</groupId>
             <artifactId>openai-java-core</artifactId>
-            <version>4.26.0</version>
+            <version>${openai-java.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -63,8 +63,74 @@
         <dependency>
             <groupId>com.openai</groupId>
             <artifactId>openai-java</artifactId>
-            <version>4.26.0</version>
+            <version>${openai-java.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-legal-files-to-release-jars</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <zip destfile="${project.build.directory}/${project.build.finalName}.jar" update="true">
+                                    <fileset dir="${project.basedir}/..">
+                                        <include name="LICENSE.txt"/>
+                                        <include name="THIRD_PARTY_LICENSES.txt"/>
+                                    </fileset>
+                                </zip>
+                                <zip destfile="${project.build.directory}/${project.build.finalName}-sources.jar" update="true">
+                                    <fileset dir="${project.basedir}/..">
+                                        <include name="LICENSE.txt"/>
+                                        <include name="THIRD_PARTY_LICENSES.txt"/>
+                                    </fileset>
+                                </zip>
+                                <zip destfile="${project.build.directory}/${project.build.finalName}-javadoc.jar" update="true">
+                                    <fileset dir="${project.basedir}/..">
+                                        <include name="LICENSE.txt"/>
+                                        <include name="THIRD_PARTY_LICENSES.txt"/>
+                                    </fileset>
+                                </zip>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

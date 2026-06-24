@@ -26,8 +26,26 @@ jobs:
           cache: maven
       - name: Build and test
         run: mvn clean verify --batch-mode --no-transfer-progress
-      - name: Verify no vendor SDK in compile scope
+      - name: Verify release artifacts include OpenAI adapter
+        run: |
+          set -euo pipefail
+          core_jar="$(find oci-genai-auth-java-core/target -maxdepth 1 -name 'oci-genai-auth-java-core-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -n 1)"
+          sources_jar="$(find oci-genai-auth-java-core/target -maxdepth 1 -name 'oci-genai-auth-java-core-*-sources.jar' | head -n 1)"
+          javadoc_jar="$(find oci-genai-auth-java-core/target -maxdepth 1 -name 'oci-genai-auth-java-core-*-javadoc.jar' | head -n 1)"
+
+          test -n "$core_jar"
+          test -n "$sources_jar"
+          test -n "$javadoc_jar"
+
+          jar tf "$core_jar" | grep -q 'com/oracle/genai/auth/OciOpenAIHttpClient.class'
+          jar tf "$sources_jar" | grep -q 'com/oracle/genai/auth/OciOpenAIHttpClient.java'
+          jar tf "$javadoc_jar" | grep -q 'com/oracle/genai/auth/OciOpenAIHttpClient.html'
+          for artifact in "$core_jar" "$sources_jar" "$javadoc_jar"; do
+            jar tf "$artifact" | grep -q '^LICENSE.txt$'
+            jar tf "$artifact" | grep -q '^THIRD_PARTY_LICENSES.txt$'
+          done
+      - name: Verify no non-optional vendor SDK in compile scope
         run: |
           mvn dependency:tree -pl oci-genai-auth-java-core --batch-mode --no-transfer-progress | \
-            grep -v "test" | grep -v "INFO" | grep -v "WARNING" | \
+            grep -v "test" | grep -v "INFO" | grep -v "WARNING" | grep -v "(optional)" | \
             (! grep -E "anthropic|openai|google-cloud")
