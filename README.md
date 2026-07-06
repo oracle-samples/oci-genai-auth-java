@@ -9,6 +9,7 @@ The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the
 - [Using API Key Auth](#using-api-key-auth)
 - [Using OCI Enterprise AI Agents APIs](#using-oci-enterprise-ai-agents-apis)
 - [Examples](#examples)
+- [Release Notes](#release-notes)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -129,6 +130,10 @@ OpenAIClient client = new OpenAIClientImpl(ClientOptions.builder()
 
 ## Examples
 Demo code and instructions on how to run them can be found in [examples](examples/) folder.
+
+## Release Notes
+
+See [RELEASE_NOTES.md](./RELEASE_NOTES.md).
 
 ## Contributing
 
