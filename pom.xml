@@ -12,7 +12,7 @@
 
     <groupId>com.oracle.genai</groupId>
     <artifactId>oci-genai-auth-java-parent</artifactId>
-    <version>1.0.9</version>
+    <version>1.0.11</version>
     <packaging>pom</packaging>
 
     <name>OCI GenAI Auth :: Parent</name>
@@ -20,6 +20,7 @@
         OCI request signing and authentication utilities for calling OCI-hosted
         AI compatibility endpoints using any HTTP client based on OkHttp.
     </description>
+    <url>https://github.com/oracle-samples/oci-genai-auth-java</url>
 
     <licenses>
         <license>
@@ -27,6 +28,22 @@
             <url>https://oss.oracle.com/licenses/upl/</url>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <id>oracle</id>
+            <name>Oracle</name>
+            <organization>Oracle</organization>
+            <organizationUrl>https://www.oracle.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/oracle-samples/oci-genai-auth-java.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/oracle-samples/oci-genai-auth-java.git</developerConnection>
+        <url>https://github.com/oracle-samples/oci-genai-auth-java</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>oci-genai-auth-java-bom</module>
@@ -39,7 +56,7 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <!-- First-party versions -->
-        <oci-genai-auth.version>1.0.9</oci-genai-auth.version>
+        <oci-genai-auth.version>1.0.11</oci-genai-auth.version>
 
         <!-- OCI SDK -->
         <oci-sdk.version>3.72.1</oci-sdk.version>
@@ -61,6 +78,7 @@
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.8.0</maven-javadoc-plugin.version>
         <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+        <flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -168,8 +186,18 @@
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>${flatten-maven-plugin.version}</version>
+                <configuration>
+                    <flattenMode>ossrh</flattenMode>
+                    <updatePomFile>false</updatePomFile>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
+                <inherited>false</inherited>
                 <executions>
                     <execution>
                         <id>copy-legal-files-to-core-target</id>
