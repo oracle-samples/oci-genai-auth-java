@@ -12,7 +12,7 @@
 
     <groupId>com.oracle.genai</groupId>
     <artifactId>oci-genai-auth-java-bom</artifactId>
-    <version>1.0.9</version>
+    <version>1.0.11</version>
     <packaging>pom</packaging>
 
     <name>OCI GenAI Auth :: BOM</name>
@@ -21,9 +21,33 @@
         Import this POM to pin the core module version and key transitive
         dependency versions, preventing diamond dependency conflicts.
     </description>
+    <url>https://github.com/oracle-samples/oci-genai-auth-java</url>
+
+    <licenses>
+        <license>
+            <name>Universal Permissive License v 1.0</name>
+            <url>https://oss.oracle.com/licenses/upl/</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>oracle</id>
+            <name>Oracle</name>
+            <organization>Oracle</organization>
+            <organizationUrl>https://www.oracle.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/oracle-samples/oci-genai-auth-java.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/oracle-samples/oci-genai-auth-java.git</developerConnection>
+        <url>https://github.com/oracle-samples/oci-genai-auth-java</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
-        <oci-genai-auth.version>1.0.9</oci-genai-auth.version>
+        <oci-genai-auth.version>1.0.11</oci-genai-auth.version>
 
         <!-- OCI SDK -->
         <oci-sdk.version>3.72.1</oci-sdk.version>

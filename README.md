@@ -9,6 +9,7 @@ The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the
 - [Using API Key Auth](#using-api-key-auth)
 - [Using OCI Enterprise AI Agents APIs](#using-oci-enterprise-ai-agents-apis)
 - [Examples](#examples)
+- [Release Notes](#release-notes)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -25,7 +26,7 @@ Requires **Java 17+** and **Maven 3.8+**.
         <dependency>
             <groupId>com.oracle.genai</groupId>
             <artifactId>oci-genai-auth-java-bom</artifactId>
-            <version>1.0.9</version>
+            <version>1.0.11</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -129,6 +130,10 @@ OpenAIClient client = new OpenAIClientImpl(ClientOptions.builder()
 
 ## Examples
 Demo code and instructions on how to run them can be found in [examples](examples/) folder.
+
+## Release Notes
+
+See [RELEASE_NOTES.md](./RELEASE_NOTES.md).
 
 ## Contributing
 

@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.oracle.genai</groupId>
         <artifactId>oci-genai-auth-java-parent</artifactId>
-        <version>1.0.9</version>
+        <version>1.0.11</version>
     </parent>
 
     <artifactId>oci-genai-auth-java-core</artifactId>
@@ -25,6 +25,30 @@
         AI compatibility endpoints. Provides OCI IAM auth providers, per-request
         signing interceptor, compartment header injection, and endpoint resolution.
     </description>
+    <url>https://github.com/oracle-samples/oci-genai-auth-java</url>
+
+    <licenses>
+        <license>
+            <name>Universal Permissive License v 1.0</name>
+            <url>https://oss.oracle.com/licenses/upl/</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>oracle</id>
+            <name>Oracle</name>
+            <organization>Oracle</organization>
+            <organizationUrl>https://www.oracle.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/oracle-samples/oci-genai-auth-java.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/oracle-samples/oci-genai-auth-java.git</developerConnection>
+        <url>https://github.com/oracle-samples/oci-genai-auth-java</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencies>
         <!-- OCI Java SDK — auth providers and request signing -->
@@ -109,22 +133,19 @@
                         <configuration>
                             <target>
                                 <zip destfile="${project.build.directory}/${project.build.finalName}.jar" update="true">
-                                    <fileset dir="${project.basedir}/..">
-                                        <include name="LICENSE.txt"/>
-                                        <include name="THIRD_PARTY_LICENSES.txt"/>
-                                    </fileset>
+                                    <zipfileset file="${project.basedir}/../LICENSE.txt" fullpath="LICENSE.txt"/>
+                                    <zipfileset file="${project.basedir}/../THIRD_PARTY_LICENSES.txt" fullpath="THIRD_PARTY_LICENSES.txt"/>
+                                    <zipfileset file="${project.basedir}/../THIRD_PARTY_LICENSES.txt" fullpath="THIRD-PARTY_LICENSE.txt"/>
                                 </zip>
                                 <zip destfile="${project.build.directory}/${project.build.finalName}-sources.jar" update="true">
-                                    <fileset dir="${project.basedir}/..">
-                                        <include name="LICENSE.txt"/>
-                                        <include name="THIRD_PARTY_LICENSES.txt"/>
-                                    </fileset>
+                                    <zipfileset file="${project.basedir}/../LICENSE.txt" fullpath="LICENSE.txt"/>
+                                    <zipfileset file="${project.basedir}/../THIRD_PARTY_LICENSES.txt" fullpath="THIRD_PARTY_LICENSES.txt"/>
+                                    <zipfileset file="${project.basedir}/../THIRD_PARTY_LICENSES.txt" fullpath="THIRD-PARTY_LICENSE.txt"/>
                                 </zip>
                                 <zip destfile="${project.build.directory}/${project.build.finalName}-javadoc.jar" update="true">
-                                    <fileset dir="${project.basedir}/..">
-                                        <include name="LICENSE.txt"/>
-                                        <include name="THIRD_PARTY_LICENSES.txt"/>
-                                    </fileset>
+                                    <zipfileset file="${project.basedir}/../LICENSE.txt" fullpath="LICENSE.txt"/>
+                                    <zipfileset file="${project.basedir}/../THIRD_PARTY_LICENSES.txt" fullpath="THIRD_PARTY_LICENSES.txt"/>
+                                    <zipfileset file="${project.basedir}/../THIRD_PARTY_LICENSES.txt" fullpath="THIRD-PARTY_LICENSE.txt"/>
                                 </zip>
                             </target>
                         </configuration>
