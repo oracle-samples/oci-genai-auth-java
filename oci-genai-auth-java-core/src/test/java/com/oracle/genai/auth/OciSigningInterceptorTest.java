@@ -159,6 +159,25 @@ class OciSigningInterceptorTest {
     }
 
     @Test
+    void removesSdkApiKeyCredentialsBeforeSigning() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        client.newCall(new Request.Builder()
+                .url(server.url("/test?key=google-sdk-key&keep=value"))
+                .header("Authorization", "Bearer sdk-token")
+                .header("X-Api-Key", "sdk-key")
+                .header("x-goog-api-key", "google-sdk-key")
+                .build()).execute().close();
+
+        RecordedRequest request = server.takeRequest();
+        assertNull(request.getHeader("X-Api-Key"));
+        assertNull(request.getHeader("x-goog-api-key"));
+        assertTrue(request.getHeader("Authorization").startsWith("Signature"));
+        assertEquals("value", request.getRequestUrl().queryParameter("keep"));
+        assertNull(request.getRequestUrl().queryParameter("key"));
+    }
+
+    @Test
     void throwsOnNullAuthProvider() {
         assertThrows(NullPointerException.class, () ->
                 new OciSigningInterceptor(null));

@@ -11,6 +11,7 @@ import com.oracle.bmc.http.signing.RequestSigner;
 import com.oracle.bmc.http.signing.SigningStrategy;
 import com.oracle.bmc.http.client.io.DuplicatableInputStream;
 import okhttp3.Interceptor;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -61,22 +62,35 @@ public class OciSigningInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request originalRequest = chain.request();
 
-        URI uri = originalRequest.url().uri();
-        String method = originalRequest.method();
+        // SDKs such as Google Gen AI attach their own API-key credentials. OCI
+        // IAM requests must carry only the OCI signature, so remove those
+        // credentials before computing and sending the signature.
+        HttpUrl sanitizedUrl = originalRequest.url().newBuilder()
+                .removeAllQueryParameters("key")
+                .build();
+        Request sanitizedRequest = originalRequest.newBuilder()
+                .url(sanitizedUrl)
+                .removeHeader("Authorization")
+                .removeHeader("X-Api-Key")
+                .removeHeader("x-goog-api-key")
+                .build();
+
+        URI uri = sanitizedRequest.url().uri();
+        String method = sanitizedRequest.method();
 
         // Read the request body for signing (OCI signs the body digest)
         byte[] bodyBytes = null;
-        if (originalRequest.body() != null) {
+        if (sanitizedRequest.body() != null) {
             Buffer buffer = new Buffer();
-            originalRequest.body().writeTo(buffer);
+            sanitizedRequest.body().writeTo(buffer);
             bodyBytes = buffer.readByteArray();
         }
 
         // Build the headers map that OCI signing expects. OkHttp adds body-derived
         // Content-Type and Content-Length later, so provide the exact values here.
         Map<String, List<String>> existingHeaders = new HashMap<>();
-        for (String name : originalRequest.headers().names()) {
-            List<String> values = originalRequest.headers(name);
+        for (String name : sanitizedRequest.headers().names()) {
+            List<String> values = sanitizedRequest.headers(name);
             if ("content-type".equalsIgnoreCase(name)) {
                 values = values.stream()
                         .map(OciSigningInterceptor::normalizeContentType)
@@ -85,9 +99,9 @@ public class OciSigningInterceptor implements Interceptor {
             existingHeaders.put(name, values);
         }
         if (bodyBytes != null) {
-            if (!containsHeader(existingHeaders, "content-type") && originalRequest.body().contentType() != null) {
+            if (!containsHeader(existingHeaders, "content-type") && sanitizedRequest.body().contentType() != null) {
                 existingHeaders.put("content-type",
-                        List.of(normalizeContentType(originalRequest.body().contentType().toString())));
+                        List.of(normalizeContentType(sanitizedRequest.body().contentType().toString())));
             }
             existingHeaders.put("content-length", List.of(String.valueOf(bodyBytes.length)));
         }
@@ -104,7 +118,7 @@ public class OciSigningInterceptor implements Interceptor {
         }
 
         // Build a new request with all signed headers applied
-        Request.Builder signedRequestBuilder = originalRequest.newBuilder();
+        Request.Builder signedRequestBuilder = sanitizedRequest.newBuilder();
         for (Map.Entry<String, String> entry : signedHeaders.entrySet()) {
             signedRequestBuilder.header(entry.getKey(), entry.getValue());
         }
@@ -112,8 +126,8 @@ public class OciSigningInterceptor implements Interceptor {
         // Re-attach the body (it was consumed during signing).
         // Use byte[] to prevent OkHttp from re-appending "; charset=utf-8".
         if (bodyBytes != null) {
-            MediaType contentType = originalRequest.body() != null
-                    ? originalRequest.body().contentType()
+            MediaType contentType = sanitizedRequest.body() != null
+                    ? sanitizedRequest.body().contentType()
                     : MediaType.parse("application/json");
             // Strip charset to keep content-type consistent with what was signed
             if (contentType != null && contentType.charset() != null) {

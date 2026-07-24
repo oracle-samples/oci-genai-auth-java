@@ -1,6 +1,6 @@
 # OCI Enterprise AI Agents Examples
 
-This folder contains examples for OCI Enterprise AI Agents APIs using the OpenAI Java SDK.
+This folder contains examples for OCI Enterprise AI Agents APIs using the OpenAI Java SDK and Google Gen AI SDK.
 
 ## Prerequisites
 
@@ -34,6 +34,7 @@ Quickstarts:
 |------|-------------|
 | `QuickstartResponsesOciIam.java` | Quickstart with OCI IAM authentication |
 | `QuickstartResponsesApiKey.java` | Quickstart with API key authentication |
+| `google/GenerateContentApiKey.java` | Google Gen AI API-key quickstart |
 
 Responses API examples:
 
@@ -53,3 +54,4 @@ Tools examples:
 
 - Most examples use IAM signing through `oci-genai-auth-java`.
 - OCI Enterprise AI Agents examples use OpenAI-compatible `/openai/v1` endpoints and require a project OCID.
+- The Google Gen AI example uses OCI Generative AI's `/google` endpoint and `OCI_GENAI_API_KEY`.

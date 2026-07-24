@@ -83,6 +83,14 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Google Gen AI SDK — optional; required only for Google SDK examples -->
+        <dependency>
+            <groupId>com.google.genai</groupId>
+            <artifactId>google-genai</artifactId>
+            <version>${google-genai.version}</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- OpenAI SDK — integration tests only -->
         <dependency>
             <groupId>com.openai</groupId>

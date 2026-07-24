@@ -1,12 +1,13 @@
 # oci-genai-auth-java
 
-The **OCI GenAI Auth** Java library provides OCI request-signing helpers for the OpenAI-compatible REST APIs hosted by OCI Generative AI.
+The **OCI GenAI Auth** Java library provides OCI request-signing helpers for SDKs that call OCI Generative AI, including the OpenAI and Google Gen AI SDKs.
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Using OCI IAM Auth](#using-oci-iam-auth)
 - [Using API Key Auth](#using-api-key-auth)
+- [Using the Google Gen AI SDK](#using-the-google-gen-ai-sdk)
 - [Using OCI Enterprise AI Agents APIs](#using-oci-enterprise-ai-agents-apis)
 - [Examples](#examples)
 - [Release Notes](#release-notes)
@@ -40,6 +41,24 @@ Requires **Java 17+** and **Maven 3.8+**.
     </dependency>
 </dependencies>
 ```
+
+## Using the Google Gen AI SDK
+
+For OCI Generative AI API-key authentication, configure the official Google Gen AI SDK with OCI's `/google` endpoint:
+
+```java
+import com.google.genai.Client;
+import com.google.genai.types.HttpOptions;
+
+Client client = Client.builder()
+        .apiKey(System.getenv("OCI_GENAI_API_KEY"))
+        .httpOptions(HttpOptions.builder()
+                .baseUrl("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/google")
+                .build())
+        .build();
+```
+
+The signing interceptor also removes `Authorization`, `X-Api-Key`, `x-goog-api-key`, and the `key` query parameter before applying OCI IAM signing. This prevents SDK credentials from conflicting when using an OCI-signing OkHttp transport.
 
 ## Using OCI IAM Auth
 
