@@ -1,5 +1,10 @@
 # Release Notes
 
+## 1.1.0
+
+- Add Google Gen AI Java SDK examples and documentation for OCI Generative AI.
+- Remove Google SDK API-key credentials before applying OCI IAM request signing.
+
 ## 1.0.11
 
 ### Changed
