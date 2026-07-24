@@ -17,9 +17,12 @@ import com.google.genai.types.HttpOptions;
 
 public class GenerateContentApiKey {
 
-    private static final String MODEL = "google.gemini-2.5-flash";
-    private static final String BASE_URL =
-            "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/google";
+    private static final String REGION = System.getenv().getOrDefault("OCI_GENAI_REGION", "us-chicago-1");
+    private static final String MODEL =
+            System.getenv().getOrDefault("OCI_GENAI_GOOGLE_MODEL", "google.gemini-2.5-flash");
+    private static final String BASE_URL = System.getenv().getOrDefault(
+            "OCI_GENAI_GOOGLE_BASE_URL",
+            "https://inference.generativeai." + REGION + ".oci.oraclecloud.com/google");
 
     public static void main(String[] args) {
         String apiKey = System.getenv("OCI_GENAI_API_KEY");

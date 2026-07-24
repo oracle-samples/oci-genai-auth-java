@@ -1,17 +1,36 @@
-# Google Gen AI SDK example
+# Google Gen AI SDK examples
 
-`GenerateContentApiKey.java` calls OCI Generative AI's Google-compatible endpoint with the official Google Gen AI Java SDK and an OCI Generative AI API key.
+This directory contains standalone examples that use the official [Google Gen AI Java SDK](https://github.com/googleapis/java-genai) with OCI Generative AI's Google-compatible endpoint.
+
+`GenerateContentApiKey.java` is an API-key example. It sends a simple prompt and prints the generated text.
 
 ## Prerequisites
 
 - Java 17 or later
 - Maven 3.8 or later
-- An OCI Generative AI API key that can access the `us-chicago-1` endpoint
+- An OCI Generative AI API key for the target endpoint
 
-Set the API key in your shell. Do not add it to the example source code.
+## Configuration
+
+Set the API key in your shell. Never add it to example source code or commit it.
 
 ```bash
 export OCI_GENAI_API_KEY=<your_oci_genai_api_key>
+```
+
+The example accepts the following optional environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `OCI_GENAI_REGION` | `us-chicago-1` | OCI region used to construct the Google-compatible endpoint. |
+| `OCI_GENAI_GOOGLE_BASE_URL` | Derived from `OCI_GENAI_REGION` | Full endpoint override, for example a private or custom endpoint. |
+| `OCI_GENAI_GOOGLE_MODEL` | `google.gemini-2.5-flash` | Model ID passed to the Google Gen AI SDK. |
+
+For example:
+
+```bash
+export OCI_GENAI_REGION=<your_oci_region>
+export OCI_GENAI_GOOGLE_MODEL=<your_google_model_id>
 ```
 
 ## Run
@@ -31,10 +50,6 @@ java -cp "/tmp/oci-genai-auth-java-google-classes:$(cat /tmp/oci-genai-auth-java
   GenerateContentApiKey
 ```
 
-The example sends a short prompt to `google.gemini-2.5-flash` through:
+The default endpoint is `https://inference.generativeai.<region>.oci.oraclecloud.com/google`.
 
-```text
-https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/google
-```
-
-On Windows, replace the `:` classpath separator in the last command with `;`.
+On Windows, replace the `:` classpath separator in the last command with `;`, and use the equivalent commands for setting environment variables.
